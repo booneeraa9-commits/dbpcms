@@ -6,6 +6,8 @@ import { queryClient } from "@/lib/query-client";
 import { router } from "@/app/router";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { ToastProvider } from "@/components/toast/ToastProvider";
+import { ThemeProvider } from "@/app/ThemeProvider";
+import { LanguageProvider } from "@/app/LanguageProvider";
 import "@/styles/index.css";
 
 /**
@@ -20,11 +22,15 @@ if (!rootElement) throw new Error("Root element #root not found");
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
-      </ToastProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <RouterProvider router={router} />
+            </AuthProvider>
+          </ToastProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

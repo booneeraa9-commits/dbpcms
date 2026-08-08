@@ -25,6 +25,7 @@ import { EmployeeForm, type EmployeeFormValues } from "./EmployeeForm";
 import { SubRecordSection } from "./SubRecordSection";
 import type { SubRecord } from "./subrecords-api";
 import { DocumentsTab } from "./DocumentsTab";
+import { EmployeePhoto } from "./EmployeePhoto";
 
 type Tab =
   | "personal"
@@ -154,11 +155,9 @@ export function EmployeeProfilePage(): JSX.Element {
       </button>
 
       {/* Header */}
-      <div className="flex items-start justify-between rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex items-start justify-between rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-100 text-xl font-semibold text-brand-700">
-            {e.firstName[0]}{e.lastName[0]}
-          </div>
+          <EmployeePhoto employeeId={e.id} firstName={e.firstName} lastName={e.lastName} canEdit={canUpdate} />
           <div>
             <h1 className="text-xl font-semibold text-slate-900">{fullName}</h1>
             <p className="text-sm text-slate-500">

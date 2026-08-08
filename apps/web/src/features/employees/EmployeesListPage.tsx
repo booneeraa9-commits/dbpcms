@@ -12,6 +12,7 @@ import { useToast } from "@/components/toast/ToastProvider";
 import { useAuth } from "@/features/auth/AuthContext";
 import { employeesApi, departmentOptionsApi, type EmployeeListItem } from "./api";
 import { EmployeeForm, type EmployeeFormValues } from "./EmployeeForm";
+import { ListAvatar } from "./ListAvatar";
 
 const PAGE_SIZE = 10;
 
@@ -68,11 +69,14 @@ export function EmployeesListPage(): JSX.Element {
     {
       header: "Employee",
       cell: (e) => (
-        <div>
-          <p className="font-medium text-slate-900">
-            {e.firstName} {e.lastName}
-          </p>
-          <p className="font-mono text-xs text-slate-500">{e.employeeNumber}</p>
+        <div className="flex items-center gap-3">
+          <ListAvatar employeeId={e.id} firstName={e.firstName} lastName={e.lastName} />
+          <div>
+            <p className="font-medium text-slate-900 dark:text-slate-100">
+              {e.firstName} {e.lastName}
+            </p>
+            <p className="font-mono text-xs text-slate-500">{e.employeeNumber}</p>
+          </div>
         </div>
       ),
     },

@@ -12,9 +12,16 @@ import {
   historyRouter,
   emergencyRouter,
 } from "./subrecords.routes.js";
+import multer from "multer";
 import { documentsRouter } from "../documents/documents.routes.js";
 import { buildEmployeeProfileHtml } from "./profile-print.js";
+import { photoService } from "./photo.service.js";
 import { env } from "../../config/env.js";
+
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 + 1024 },
+});
 
 function actor(req: Request) {
   return {
@@ -50,6 +57,43 @@ employeesRouter.get(
   requirePermission(PERMISSIONS.EMPLOYEE_READ),
   asyncHandler(async (req: Request, res: Response) => {
     sendSuccess(res, await employeesService.getById(req.params.id!));
+  }),
+);
+
+// Employee portrait photo: upload (multipart), fetch, and remove.
+employeesRouter.get(
+  "/:id/photo",
+  requirePermission(PERMISSIONS.EMPLOYEE_READ),
+  asyncHandler(async (req: Request, res: Response) => {
+    const { data, mimeType } = await photoService.getPhoto(req.params.id!);
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader("Cache-Control", "private, max-age=60");
+    res.send(data);
+  }),
+);
+employeesRouter.post(
+  "/:id/photo",
+  requirePermission(PERMISSIONS.EMPLOYEE_UPDATE),
+  photoUpload.single("file"),
+  asyncHandler(async (req: Request, res: Response) => {
+    await photoService.upload(req.params.id!, req.file, {
+      userId: req.auth!.userId,
+      ipAddress: req.ip ?? null,
+      userAgent: req.headers["user-agent"] ?? null,
+    });
+    sendSuccess(res, { uploaded: true }, 201);
+  }),
+);
+employeesRouter.delete(
+  "/:id/photo",
+  requirePermission(PERMISSIONS.EMPLOYEE_UPDATE),
+  asyncHandler(async (req: Request, res: Response) => {
+    await photoService.remove(req.params.id!, {
+      userId: req.auth!.userId,
+      ipAddress: req.ip ?? null,
+      userAgent: req.headers["user-agent"] ?? null,
+    });
+    res.status(204).send();
   }),
 );
 

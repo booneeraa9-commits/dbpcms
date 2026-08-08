@@ -13,8 +13,15 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100;
   font-family:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
     sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
 }

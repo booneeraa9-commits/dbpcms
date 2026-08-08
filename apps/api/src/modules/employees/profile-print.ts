@@ -8,6 +8,7 @@ import { NotFoundError } from "../../core/errors/app-error.js";
 import { prisma } from "../../core/db/prisma.js";
 import { settingsService } from "../settings/settings.service.js";
 import { verificationService } from "../verification/verification.service.js";
+import { photoService } from "./photo.service.js";
 
 function esc(v: unknown): string {
   if (v === null || v === undefined || v === "") return "&mdash;";
@@ -55,6 +56,7 @@ export async function buildEmployeeProfileHtml(
   });
   const verifyUrl = `${publicBaseUrl}/verify?code=${encodeURIComponent(verification.code)}`;
   const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, width: 120 });
+  const photoDataUrl = await photoService.getPhotoDataUrl(e.id);
 
   const field = (label: string, value: unknown): string =>
     `<div class="field"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`;
@@ -83,6 +85,9 @@ export async function buildEmployeeProfileHtml(
             border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; margin-bottom: 14px; }
   .header h1 { font-size: 18px; margin: 0 0 2px; color: #1d4ed8; }
   .header .sub { color: #475569; font-size: 12px; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .photo { width: 84px; height: 84px; border-radius: 6px; object-fit: cover;
+           border: 1px solid #cbd5e1; }
   .person { text-align: right; }
   .person .n { font-size: 15px; font-weight: bold; }
   .person .no { font-family: monospace; color: #64748b; }
@@ -111,7 +116,10 @@ export async function buildEmployeeProfileHtml(
   </div>
 
   <div class="header">
-    <div><h1>${esc(institution)}</h1><div class="sub">Official Employee Profile</div></div>
+    <div class="header-left">
+      ${photoDataUrl ? `<img class="photo" src="${photoDataUrl}" alt="Employee photo" />` : ""}
+      <div><h1>${esc(institution)}</h1><div class="sub">Official Employee Profile</div></div>
+    </div>
     <div class="person"><div class="n">${esc(name)}</div>
       <div class="no">${esc(e.employeeNumber)}</div>
       <div class="sub">${esc(e.position)} &middot; ${esc(e.department?.name)}</div></div>

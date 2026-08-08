@@ -262,6 +262,7 @@ model Employee {
   salaryGrade      String?   @map("salary_grade")
   officeLocation   String?   @map("office_location")
   supervisorId     String?   @map("supervisor_id") @db.Uuid
+  photoStorageKey  String?   @map("photo_storage_key")
 
   department Department @relation("DepartmentEmployees", fields: [departmentId], references: [id], onDelete: Restrict)
   supervisor Employee?  @relation("EmployeeSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
