@@ -2,11 +2,10 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ClipboardList, ChevronRight } from "lucide-react";
-import { sectionsApi } from "@/features/academic/courses-sections-api";
 import { academicYearsApi, semestersApi } from "@/features/academic/api";
 import { DataTable, type Column } from "@/components/DataTable";
 import { GradesheetGrid } from "./GradesheetGrid";
-import type { Section } from "@/features/academic/courses-sections-api";
+import { gradesApi, type GradableSection } from "./api";
 
 /**
  * Grade Entry: pick a semester, choose a section, and open its gradesheet grid.
@@ -21,14 +20,14 @@ export function GradeEntryPage(): JSX.Element {
   const { data: semesters } = useQuery({ queryKey: ["sem-grade-entry", semYear], queryFn: () => semestersApi.list({ page: 1, pageSize: 50, academicYear: semYear || undefined }) });
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["sections-grade-entry", semesterFilter],
-    queryFn: () => sectionsApi.list({ page: 1, pageSize: 100, semester: semesterFilter || undefined }),
+    queryFn: () => gradesApi.sections(semesterFilter || undefined),
   });
 
   if (openSection) {
     return <GradesheetGrid sectionId={openSection} onBack={() => setOpenSection(null)} />;
   }
 
-  const columns: Column<Section>[] = [
+  const columns: Column<GradableSection>[] = [
     { header: "Course", cell: (s) => <div><p className="font-medium text-slate-900 dark:text-slate-100">{s.course?.code} — {s.course?.title}</p><p className="text-xs text-slate-500">Section {s.sectionLabel} · {s.semester?.name}</p></div> },
     { header: "Instructors", cell: (s) => s.instructors.length ? s.instructors.map((i) => i.instructor.fullName).join(", ") : <span className="text-slate-400">None</span> },
     { header: "Enrolled", cell: (s) => s._count?.enrollments ?? 0 },
@@ -56,7 +55,7 @@ export function GradeEntryPage(): JSX.Element {
         </select>
       </div>
 
-      <DataTable columns={columns} rows={data?.items ?? []} rowKey={(s) => s.id} isLoading={isLoading} isError={isError} emptyMessage="No sections found. Create sections under Academic → Sections." onRetry={() => void refetch()} />
+      <DataTable columns={columns} rows={data ?? []} rowKey={(s) => s.id} isLoading={isLoading} isError={isError} emptyMessage="No sections assigned to you yet. An admin/registrar assigns instructors to sections under Academic → Sections." onRetry={() => void refetch()} />
     </div>
   );
 }

@@ -49,7 +49,21 @@ async function saveGrades(sectionId: string, entries: SaveEntry[]): Promise<Grad
   return json.data as Gradesheet;
 }
 
+export interface GradableSection {
+  id: string;
+  sectionLabel: string;
+  course?: { id: string; code: string; title: string; creditHours: number };
+  semester?: { id: string; name: string };
+  instructors: { instructor: { id: string; fullName: string; email: string } }[];
+  gradeSubmission?: { status: string } | null;
+  _count?: { enrollments: number };
+}
+
 export const gradesApi = {
+  sections: (semester?: string) => {
+    const q = semester ? `?semester=${encodeURIComponent(semester)}` : "";
+    return api.get<GradableSection[]>(`/grades/sections${q}`);
+  },
   gradesheet: (sectionId: string) =>
     api.get<Gradesheet>(`/grades/sections/${sectionId}/gradesheet`),
   save: saveGrades,

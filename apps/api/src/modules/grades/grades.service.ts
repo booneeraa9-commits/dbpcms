@@ -42,6 +42,62 @@ async function loadScale(): Promise<{ bands: ScaleBand[]; rounding: string; pass
 
 export const gradesService = {
   /**
+   * Lists the sections relevant to the current user for grade entry:
+   *  - instructors: only sections assigned to them
+   *  - dept heads: sections in their department
+   *  - admin/registrar (section:manage): all sections
+   * Gated by grade:enter, so instructors (who lack section:manage) can still see
+   * their own sections to grade.
+   */
+  async listGradableSections(userId: string, filters: { semester?: string }) {
+    const user = await prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+      include: { roles: { include: { role: { include: { permissions: { include: { permission: true } } } } } } },
+    });
+    const perms = new Set<string>();
+    const roleNames: string[] = [];
+    if (user) {
+      for (const ur of user.roles) {
+        roleNames.push(ur.role.name);
+        for (const rp of ur.role.permissions) perms.add(rp.permission.key);
+      }
+    }
+
+    const where: Record<string, unknown> = { deletedAt: null };
+    if (filters.semester) where.semesterId = filters.semester;
+
+    // If the user can manage sections (admin/registrar), show all.
+    const canSeeAll = perms.has("section:manage");
+    if (!canSeeAll) {
+      // Otherwise limit to sections they're assigned to OR head their department.
+      const headedDepts = await prisma.department.findMany({
+        where: { headUserId: userId, deletedAt: null },
+        select: { id: true },
+      });
+      const deptIds = headedDepts.map((d) => d.id);
+      where.OR = [
+        { instructors: { some: { instructorId: userId } } },
+        ...(deptIds.length > 0
+          ? [{ course: { program: { departmentId: { in: deptIds } } } }]
+          : []),
+      ];
+    }
+
+    const items = await prisma.section.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        course: { select: { id: true, code: true, title: true, creditHours: true } },
+        semester: { select: { id: true, name: true } },
+        instructors: { include: { instructor: { select: { id: true, fullName: true, email: true } } } },
+        gradeSubmission: { select: { status: true } },
+        _count: { select: { enrollments: true } },
+      },
+    });
+    return items;
+  },
+
+  /**
    * Builds the gradesheet for a section: the active components, each enrolled
    * student, their saved scores, and a live-computed result per student.
    */

@@ -15,6 +15,17 @@ function actor(req: Request) {
 export const gradesRouter = Router();
 gradesRouter.use(authenticate);
 
+// Sections the current user may grade (their own if instructor; all if admin/registrar).
+gradesRouter.get(
+  "/sections",
+  requirePermission(PERMISSIONS.GRADE_ENTER),
+  asyncHandler(async (req: Request, res: Response) => {
+    const semester = typeof req.query.semester === "string" ? req.query.semester : undefined;
+    const items = await gradesService.listGradableSections(req.auth!.userId, { semester });
+    sendSuccess(res, items);
+  }),
+);
+
 // Read the gradesheet for a section (grid data + live computed results).
 gradesRouter.get(
   "/sections/:sectionId/gradesheet",
