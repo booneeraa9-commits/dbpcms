@@ -1,0 +1,153 @@
+// DBPCMS database schema (Prisma).
+// This file is the single blueprint for the database structure. Running
+// `prisma migrate` turns changes here into versioned SQL that builds the
+// database identically on every machine (your laptop and the VPS).
+//
+// Phase 2 introduces Identity & Access tables. Later phases add employees,
+// students, grading, etc. — each as a new migration, without touching these.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A login identity. Not every employee is a user, and not every user is an
+/// employee, so users are kept separate (a link to Employee is added later).
+model User {
+  id       String  @id @default(uuid()) @db.Uuid
+  email    String  @unique
+  /// The password is never stored in plain text — only its argon2 hash.
+  passwordHash String @map("password_hash")
+
+  fullName String  @map("full_name")
+  isActive Boolean @default(true) @map("is_active")
+
+  /// Force a password change on next login (used for seeded/reset accounts).
+  mustChangePassword Boolean @default(false) @map("must_change_password")
+
+  /// Account-lockout tracking (brute-force protection).
+  failedLoginCount Int       @default(0) @map("failed_login_count")
+  lockedUntil      DateTime? @map("locked_until")
+
+  /// Bumping this number instantly invalidates all existing access tokens
+  /// (used on logout-all, password change, or admin action).
+  tokenVersion Int @default(0) @map("token_version")
+
+  lastLoginAt DateTime? @map("last_login_at")
+
+  roles         UserRole[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  // Standard audit columns present on every table.
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(0)
+
+  @@index([email])
+  @@map("users")
+}
+
+/// A named bundle of permissions (e.g. "instructor").
+model Role {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique
+  description String?
+  /// System roles cannot be deleted through the UI (protects built-ins).
+  isSystem    Boolean @default(false) @map("is_system")
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+/// One fine-grained ability, e.g. "grade:approve". Code checks these.
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique
+  description String?
+
+  roles RolePermission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("permissions")
+}
+
+/// Join table: a user has many roles; a role has many users.
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+/// Join table: a role has many permissions; a permission belongs to many roles.
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+/// A stored refresh-token session. Storing a HASH of the token (never the raw
+/// token) lets us revoke sessions and survive a database leak safely.
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Append-only diary of critical actions: who did what, when, from where.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  before     Json?
+  after      Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}

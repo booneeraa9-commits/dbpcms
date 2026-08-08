@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Users, GraduationCap, Building2 } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthContext";
 
 /**
  * A placeholder dashboard for the Phase 1 skeleton. It also proves the
@@ -27,6 +28,7 @@ const STATS = [
 ];
 
 export function DashboardPage(): JSX.Element {
+  const { user } = useAuth();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["health"],
     queryFn: fetchHealth,
@@ -35,9 +37,12 @@ export function DashboardPage(): JSX.Element {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Welcome{user ? `, ${user.fullName}` : ""}
+        </h1>
         <p className="text-sm text-slate-500">
-          Welcome to the Donna Barbar Polytechnic College Management System.
+          Donna Barbar Polytechnic College Management System.
+          {user ? ` Signed in as ${user.roles.join(", ")}.` : ""}
         </p>
       </div>
 

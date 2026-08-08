@@ -1,12 +1,14 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./core/logging/logger.js";
 import { requestContext } from "./middleware/request-context.js";
 import { notFoundHandler } from "./middleware/not-found.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { generalRateLimiter } from "./middleware/rate-limit.js";
 import { apiV1Router } from "./routes.js";
 import { sendSuccess } from "./core/http/responses.js";
 
@@ -37,6 +39,9 @@ export function createApp(): Express {
   // Parse JSON bodies (with a size limit to blunt abuse).
   app.use(express.json({ limit: "1mb" }));
 
+  // Parse cookies (needed to read the refresh-token cookie).
+  app.use(cookieParser());
+
   // Give every request an id, then log it.
   app.use(requestContext);
   app.use(
@@ -51,8 +56,8 @@ export function createApp(): Express {
     sendSuccess(res, { status: "ok", service: "dbpcms-api" }),
   );
 
-  // The versioned API.
-  app.use("/api/v1", apiV1Router);
+  // The versioned API (with a general rate limit).
+  app.use("/api/v1", generalRateLimiter, apiV1Router);
 
   // 404 for anything unmatched, then the central error handler (must be last).
   app.use(notFoundHandler);

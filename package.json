@@ -20,7 +20,11 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "argon2",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines"
     ]
   }
 }

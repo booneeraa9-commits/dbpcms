@@ -4,12 +4,15 @@ import path from "node:path";
 import { z } from "zod";
 
 /**
- * Load the .env file BEFORE anything reads process.env. Path is resolved
- * relative to this file, so it works no matter which folder you run from.
+ * IMPORTANT: load the .env file BEFORE anything reads process.env.
+ * We resolve the path relative to THIS file (apps/api/src/config/env.ts) so it
+ * works no matter which folder you run the command from. The .env lives at
+ * apps/api/.env — two levels up from this file's directory.
  */
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const envFilePath = path.resolve(currentDir, "../../.env");
 loadDotenv({ path: envFilePath });
+
 /**
  * Reads and VALIDATES environment variables at startup.
  * If a required variable is missing or malformed, the app refuses to start with
@@ -57,7 +60,8 @@ if (!parsed.success) {
   // eslint-disable-next-line no-console
   console.error(
     `\n[DBPCMS] Invalid environment configuration:\n${issues}\n\n` +
-      `Copy apps/api/.env.example to apps/api/.env and fill in the values.\n`,
+      `Copy apps/api/.env.example to apps/api/.env and fill in the values.\n` +
+      `(Looked for the file at: ${envFilePath})\n`,
   );
   process.exit(1);
 }

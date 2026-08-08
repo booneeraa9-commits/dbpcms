@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -10,33 +10,72 @@ import {
   Menu,
   Bell,
   Search,
+  LogOut,
 } from "lucide-react";
+import { PERMISSIONS } from "@dbpcms/shared";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/features/auth/AuthContext";
 
 /**
- * The application shell shared by every page: a sidebar (navigation), a top bar
- * (search, notifications, user), and a content area where each page renders.
- *
- * NOTE: In Phase 3 the sidebar items will be filtered by the logged-in user's
- * permissions. For now the skeleton shows the structure.
+ * The application shell: sidebar (filtered by the user's permissions), a top bar
+ * with a working user menu + logout, and the page content area.
  */
-
 interface NavItem {
   label: string;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
+  /** If set, the item only shows when the user has this permission. */
+  permission?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
-  { label: "Employees", to: "/employees", icon: Users },
-  { label: "Grading", to: "/grading", icon: GraduationCap },
-  { label: "Departments", to: "/departments", icon: Building2 },
-  { label: "Administration", to: "/admin", icon: ShieldCheck },
+  {
+    label: "Employees",
+    to: "/employees",
+    icon: Users,
+    permission: PERMISSIONS.EMPLOYEE_READ,
+  },
+  {
+    label: "Grading",
+    to: "/grading",
+    icon: GraduationCap,
+    permission: PERMISSIONS.GRADE_ENTER,
+  },
+  {
+    label: "Departments",
+    to: "/departments",
+    icon: Building2,
+    permission: PERMISSIONS.DEPARTMENT_READ,
+  },
+  {
+    label: "Administration",
+    to: "/admin",
+    icon: ShieldCheck,
+    permission: PERMISSIONS.USER_READ,
+  },
 ];
 
 export function AppLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, hasPermission, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.permission || hasPermission(item.permission),
+  );
+
+  const initials = (user?.fullName ?? "User")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  async function handleLogout(): Promise<void> {
+    await logout();
+    navigate("/login", { replace: true });
+  }
 
   return (
     <div className="flex h-full">
@@ -57,7 +96,7 @@ export function AppLayout(): JSX.Element {
           </div>
         </div>
         <nav className="space-y-1 p-3">
-          {NAV_ITEMS.map((item) => (
+          {visibleItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -79,7 +118,6 @@ export function AppLayout(): JSX.Element {
         </nav>
       </aside>
 
-      {/* Backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 md:hidden"
@@ -118,11 +156,22 @@ export function AppLayout(): JSX.Element {
             >
               <Bell className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3">
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
-                A
+                {initials}
               </div>
-              <span className="text-sm font-medium text-slate-700">Admin</span>
+              <span className="hidden text-sm font-medium text-slate-700 sm:inline">
+                {user?.fullName ?? "User"}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="ml-1 rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-red-600"
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </header>
