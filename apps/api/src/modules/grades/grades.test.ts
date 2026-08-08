@@ -45,12 +45,13 @@ describe("Grade entry (Phase 7A)", () => {
     expect(res.body.data.locked).toBe(false);
   });
 
-  it("saves full marks and computes 100% -> A+ (pass)", async () => {
+  it("saves full marks (raw, per component max) and computes 100% -> A+ (pass)", async () => {
+    // Scores are raw marks out of each component's own max (10/15/25/50).
     const entries = [
-      { enrollmentId, componentId: componentIds["Quiz"], score: 10, maxScore: 10 },
-      { enrollmentId, componentId: componentIds["Assignment"], score: 15, maxScore: 15 },
-      { enrollmentId, componentId: componentIds["Mid Exam"], score: 25, maxScore: 25 },
-      { enrollmentId, componentId: componentIds["Final Exam"], score: 50, maxScore: 50 },
+      { enrollmentId, componentId: componentIds["Quiz"], score: 10 },
+      { enrollmentId, componentId: componentIds["Assignment"], score: 15 },
+      { enrollmentId, componentId: componentIds["Mid Exam"], score: 25 },
+      { enrollmentId, componentId: componentIds["Final Exam"], score: 50 },
     ];
     const res = await request(app).put(`/api/v1/grades/sections/${sectionId}/grades`).set(auth()).send({ entries });
     expect(res.status).toBe(200);
@@ -60,14 +61,19 @@ describe("Grade entry (Phase 7A)", () => {
     expect(row.result.isPass).toBe(true);
   });
 
+  it("rejects a score above the component's max (422)", async () => {
+    const res = await request(app).put(`/api/v1/grades/sections/${sectionId}/grades`).set(auth()).send({
+      entries: [{ enrollmentId, componentId: componentIds["Quiz"], score: 99 }], // Quiz is out of 10
+    });
+    expect(res.status).toBe(422);
+  });
+
   it("recomputes to a fail when ALL components are low", async () => {
-    // Saving is incremental (upsert), so we overwrite every component with a low
-    // score to bring the overall result down to a fail.
     const entries = [
-      { enrollmentId, componentId: componentIds["Quiz"], score: 2, maxScore: 10 },
-      { enrollmentId, componentId: componentIds["Assignment"], score: 3, maxScore: 15 },
-      { enrollmentId, componentId: componentIds["Mid Exam"], score: 5, maxScore: 25 },
-      { enrollmentId, componentId: componentIds["Final Exam"], score: 10, maxScore: 50 },
+      { enrollmentId, componentId: componentIds["Quiz"], score: 2 },
+      { enrollmentId, componentId: componentIds["Assignment"], score: 3 },
+      { enrollmentId, componentId: componentIds["Mid Exam"], score: 5 },
+      { enrollmentId, componentId: componentIds["Final Exam"], score: 10 },
     ];
     const res = await request(app).put(`/api/v1/grades/sections/${sectionId}/grades`).set(auth()).send({ entries });
     const row = res.body.data.rows[0];

@@ -29,14 +29,15 @@ export function ComponentsEditor(): JSX.Element {
   const [deleting, setDeleting] = useState<GradeComponent | null>(null);
   const [name, setName] = useState("");
   const [weight, setWeight] = useState(10);
+  const [maxScore, setMaxScore] = useState(10);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const openCreate = () => { setEditing(null); setName(""); setWeight(10); setErrors({}); setOpen(true); };
-  const openEdit = (c: GradeComponent) => { setEditing(c); setName(c.name); setWeight(c.weightPercent); setErrors({}); setOpen(true); };
+  const openCreate = () => { setEditing(null); setName(""); setWeight(10); setMaxScore(10); setErrors({}); setOpen(true); };
+  const openEdit = (c: GradeComponent) => { setEditing(c); setName(c.name); setWeight(c.weightPercent); setMaxScore(c.maxScore); setErrors({}); setOpen(true); };
 
   const save = useMutation({
     mutationFn: async () => {
-      const payload = { name, weightPercent: weight, sequence: editing?.sequence ?? (data?.components.length ?? 0) + 1, isActive: true };
+      const payload = { name, weightPercent: weight, maxScore, sequence: editing?.sequence ?? (data?.components.length ?? 0) + 1, isActive: true };
       const parsed = gradeComponentSchema.safeParse(payload);
       if (!parsed.success) { const e: Record<string, string> = {}; for (const i of parsed.error.issues) e[String(i.path[0])] = i.message; setErrors(e); throw new Error("v"); }
       return editing ? gradingConfigApi.updateComponent(editing.id, payload) : gradingConfigApi.createComponent(payload);
@@ -55,6 +56,7 @@ export function ComponentsEditor(): JSX.Element {
 
   const columns: Column<GradeComponent>[] = [
     { header: "Component", cell: (c) => <span className="font-medium text-slate-900 dark:text-slate-100">{c.name}</span> },
+    { header: "Out of", cell: (c) => c.maxScore },
     { header: "Weight", cell: (c) => `${c.weightPercent}%` },
     { header: "Status", cell: (c) => c.isActive ? <span className="text-emerald-600">Active</span> : <span className="text-slate-400">Inactive</span> },
     { header: "", className: "text-right", cell: (c) => canManage ? (
@@ -86,7 +88,11 @@ export function ComponentsEditor(): JSX.Element {
       <Modal open={open} title={editing ? "Edit component" : "Add component"} onClose={() => setOpen(false)}>
         <form onSubmit={submit} noValidate className="space-y-4">
           <Input id="gc-name" label="Name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} placeholder="e.g. Mid Exam" />
-          <Input id="gc-weight" label="Weight (%)" type="number" min={0} max={100} value={weight} onChange={(e) => setWeight(Number(e.target.value))} error={errors.weightPercent} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input id="gc-max" label="Out of (max score)" type="number" min={1} value={maxScore} onChange={(e) => setMaxScore(Number(e.target.value))} error={errors.maxScore} placeholder="e.g. 25" />
+            <Input id="gc-weight" label="Weight (%)" type="number" min={0} max={100} value={weight} onChange={(e) => setWeight(Number(e.target.value))} error={errors.weightPercent} />
+          </div>
+          <p className="text-xs text-slate-500">Instructors enter marks out of the max; the weight is how much it counts toward the final grade.</p>
           {errors.form && <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{errors.form}</div>}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { calculateGrade, type ComponentScore, type ScaleBand } from "@dbpcms/shared";
-import { ForbiddenError, NotFoundError } from "../../core/errors/app-error.js";
+import { ForbiddenError, NotFoundError, ValidationError } from "../../core/errors/app-error.js";
 import { writeAudit } from "../../core/audit/audit.js";
 import { prisma } from "../../core/db/prisma.js";
 import { assertCanEnterGrades } from "./grades.access.js";
@@ -11,13 +11,14 @@ interface ActorMeta {
   userAgent?: string | null;
 }
 
+// Instructors send only the raw score per (enrollment, component). The max
+// comes from the component definition, so it can't be tampered with.
 const saveGradesSchema = z.object({
   entries: z.array(
     z.object({
       enrollmentId: z.string().uuid(),
       componentId: z.string().uuid(),
       score: z.coerce.number().min(0),
-      maxScore: z.coerce.number().min(0.01),
     }),
   ),
 });
@@ -67,13 +68,14 @@ export const gradesService = {
     const scale = await loadScale();
 
     const rows = enrollments.map((e) => {
-      const scores: Record<string, { score: number; maxScore: number }> = {};
+      const scores: Record<string, { score: number }> = {};
       const compScores: ComponentScore[] = [];
       for (const comp of components) {
         const entry = e.gradeEntries.find((g) => g.componentId === comp.id);
         if (entry) {
-          scores[comp.id] = { score: entry.score, maxScore: entry.maxScore };
-          compScores.push({ weightPercent: comp.weightPercent, score: entry.score, maxScore: entry.maxScore });
+          scores[comp.id] = { score: entry.score };
+          // Max always comes from the component definition (source of truth).
+          compScores.push({ weightPercent: comp.weightPercent, score: entry.score, maxScore: comp.maxScore });
         }
       }
       const result = scale && compScores.length > 0
@@ -89,7 +91,7 @@ export const gradesService = {
 
     return {
       section: { id: section.id, sectionLabel: section.sectionLabel, course: section.course, semester: section.semester },
-      components: components.map((c) => ({ id: c.id, name: c.name, weightPercent: c.weightPercent })),
+      components: components.map((c) => ({ id: c.id, name: c.name, weightPercent: c.weightPercent, maxScore: c.maxScore })),
       status: submission?.status ?? "draft",
       locked: submission?.status === "published",
       rows,
@@ -109,22 +111,34 @@ export const gradesService = {
       throw new ForbiddenError("Grades are awaiting approval and cannot be edited right now.");
     }
 
-    // Validate the enrollments belong to this section and components are active.
+    // Validate the enrollments belong to this section, and load component maxes.
     const validEnrollmentIds = new Set(
       (await prisma.enrollment.findMany({ where: { sectionId, deletedAt: null }, select: { id: true } })).map((e) => e.id),
     );
-    const validComponentIds = new Set(
-      (await prisma.gradeComponent.findMany({ where: { deletedAt: null, isActive: true }, select: { id: true } })).map((c) => c.id),
-    );
+    const components = await prisma.gradeComponent.findMany({
+      where: { deletedAt: null, isActive: true },
+      select: { id: true, maxScore: true },
+    });
+    const maxById = new Map(components.map((c) => [c.id, c.maxScore]));
+
+    // Reject any score above its component's max — the component defines the ceiling.
+    const invalid: { field: string; message: string }[] = [];
+    for (const entry of input.entries) {
+      const max = maxById.get(entry.componentId);
+      if (max !== undefined && entry.score > max) {
+        invalid.push({ field: "score", message: `A score of ${entry.score} exceeds the maximum of ${max} for this component.` });
+      }
+    }
+    if (invalid.length > 0) throw new ValidationError(invalid);
 
     await prisma.$transaction(async (tx) => {
       for (const entry of input.entries) {
-        if (!validEnrollmentIds.has(entry.enrollmentId) || !validComponentIds.has(entry.componentId)) continue;
-        if (entry.score > entry.maxScore) continue; // ignore impossible scores
+        const max = maxById.get(entry.componentId);
+        if (!validEnrollmentIds.has(entry.enrollmentId) || max === undefined) continue;
         await tx.gradeEntry.upsert({
           where: { enrollmentId_componentId: { enrollmentId: entry.enrollmentId, componentId: entry.componentId } },
-          update: { score: entry.score, maxScore: entry.maxScore, enteredBy: actor.userId },
-          create: { enrollmentId: entry.enrollmentId, componentId: entry.componentId, score: entry.score, maxScore: entry.maxScore, enteredBy: actor.userId },
+          update: { score: entry.score, maxScore: max, enteredBy: actor.userId },
+          create: { enrollmentId: entry.enrollmentId, componentId: entry.componentId, score: entry.score, maxScore: max, enteredBy: actor.userId },
         });
       }
       // Ensure a draft submission row exists.

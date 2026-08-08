@@ -9,7 +9,7 @@ export interface GradeComputed {
 export interface GradesheetRow {
   enrollmentId: string;
   student: { id: string; studentNumber: string; firstName: string; lastName: string };
-  scores: Record<string, { score: number; maxScore: number }>;
+  scores: Record<string, { score: number }>;
   result: GradeComputed | null;
 }
 export interface Gradesheet {
@@ -19,7 +19,7 @@ export interface Gradesheet {
     course: { code: string; title: string; creditHours: number };
     semester: { name: string };
   };
-  components: { id: string; name: string; weightPercent: number }[];
+  components: { id: string; name: string; weightPercent: number; maxScore: number }[];
   status: string;
   locked: boolean;
   rows: GradesheetRow[];
@@ -29,7 +29,6 @@ export interface SaveEntry {
   enrollmentId: string;
   componentId: string;
   score: number;
-  maxScore: number;
 }
 
 /** PUT helper (the shared api-client exposes get/post/patch/delete). */
@@ -54,4 +53,10 @@ export const gradesApi = {
   gradesheet: (sectionId: string) =>
     api.get<Gradesheet>(`/grades/sections/${sectionId}/gradesheet`),
   save: saveGrades,
+  submit: (sectionId: string) => api.post(`/grades/sections/${sectionId}/submit`),
+  approve: (sectionId: string) => api.post(`/grades/sections/${sectionId}/approve`),
+  publish: (sectionId: string) => api.post(`/grades/sections/${sectionId}/publish`),
+  returnForCorrection: (sectionId: string, reason: string) =>
+    api.post(`/grades/sections/${sectionId}/return`, { reason }),
+  unlock: (sectionId: string) => api.post(`/grades/sections/${sectionId}/unlock`),
 };

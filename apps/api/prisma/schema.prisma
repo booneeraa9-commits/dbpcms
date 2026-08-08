@@ -630,6 +630,7 @@ model GradeComponent {
   id             String  @id @default(uuid()) @db.Uuid
   name           String
   weightPercent  Float   @map("weight_percent")
+  maxScore       Float   @default(100) @map("max_score")
   sequence       Int     @default(0)
   departmentId   String? @map("department_id") @db.Uuid // null = college-wide
   isActive       Boolean @default(true) @map("is_active")

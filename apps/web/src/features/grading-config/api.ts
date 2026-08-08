@@ -5,6 +5,7 @@ export interface GradeComponent {
   id: string;
   name: string;
   weightPercent: number;
+  maxScore: number;
   sequence: number;
   isActive: boolean;
 }

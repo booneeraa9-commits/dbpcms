@@ -41,6 +41,7 @@ export const gradingConfigService = {
       data: {
         name: input.name,
         weightPercent: input.weightPercent,
+        maxScore: input.maxScore,
         sequence: input.sequence,
         isActive: input.isActive,
         createdBy: actor.userId,

@@ -158,10 +158,10 @@ async function main(): Promise<void> {
     console.log("  • Seeding default grade components…");
     await prisma.gradeComponent.createMany({
       data: [
-        { name: "Quiz", weightPercent: 10, sequence: 1 },
-        { name: "Assignment", weightPercent: 15, sequence: 2 },
-        { name: "Mid Exam", weightPercent: 25, sequence: 3 },
-        { name: "Final Exam", weightPercent: 50, sequence: 4 },
+        { name: "Quiz", weightPercent: 10, maxScore: 10, sequence: 1 },
+        { name: "Assignment", weightPercent: 15, maxScore: 15, sequence: 2 },
+        { name: "Mid Exam", weightPercent: 25, maxScore: 25, sequence: 3 },
+        { name: "Final Exam", weightPercent: 50, maxScore: 50, sequence: 4 },
       ],
     });
   }

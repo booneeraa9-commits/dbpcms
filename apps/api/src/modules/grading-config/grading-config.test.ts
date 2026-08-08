@@ -32,11 +32,12 @@ describe("Grading configuration", () => {
     expect(res.body.data.bands.length).toBe(10);
   });
 
-  it("adds a component", async () => {
+  it("adds a component (with a max score)", async () => {
     const res = await request(app).post("/api/v1/grading-config/components").set(auth())
-      .send({ name: "Presentation", weightPercent: 5 });
+      .send({ name: "Presentation", weightPercent: 5, maxScore: 20 });
     expect(res.status).toBe(201);
     expect(res.body.data.name).toBe("Presentation");
+    expect(res.body.data.maxScore).toBe(20);
   });
 
   it("rejects overlapping bands when saving a scale (422)", async () => {

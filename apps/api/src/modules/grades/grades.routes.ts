@@ -6,6 +6,7 @@ import { requirePermission } from "../../middleware/require-permission.js";
 import { asyncHandler } from "../../core/http/async-handler.js";
 import { sendSuccess } from "../../core/http/responses.js";
 import { gradesService } from "./grades.service.js";
+import { gradeWorkflowService } from "./workflow.service.js";
 
 function actor(req: Request) {
   return { userId: req.auth!.userId, ipAddress: req.ip ?? null, userAgent: req.headers["user-agent"] ?? null };
@@ -29,5 +30,42 @@ gradesRouter.put(
   requirePermission(PERMISSIONS.GRADE_ENTER),
   asyncHandler(async (req: Request, res: Response) => {
     sendSuccess(res, await gradesService.saveGrades(req.params.sectionId!, req.body, actor(req)));
+  }),
+);
+
+// --- Approval workflow (Phase 7B) ---
+gradesRouter.post(
+  "/sections/:sectionId/submit",
+  requirePermission(PERMISSIONS.GRADE_SUBMIT),
+  asyncHandler(async (req: Request, res: Response) => {
+    sendSuccess(res, await gradeWorkflowService.submit(req.params.sectionId!, actor(req)));
+  }),
+);
+gradesRouter.post(
+  "/sections/:sectionId/approve",
+  requirePermission(PERMISSIONS.GRADE_APPROVE),
+  asyncHandler(async (req: Request, res: Response) => {
+    sendSuccess(res, await gradeWorkflowService.approve(req.params.sectionId!, actor(req)));
+  }),
+);
+gradesRouter.post(
+  "/sections/:sectionId/publish",
+  requirePermission(PERMISSIONS.GRADE_PUBLISH),
+  asyncHandler(async (req: Request, res: Response) => {
+    sendSuccess(res, await gradeWorkflowService.publish(req.params.sectionId!, actor(req)));
+  }),
+);
+gradesRouter.post(
+  "/sections/:sectionId/return",
+  requirePermission(PERMISSIONS.GRADE_APPROVE),
+  asyncHandler(async (req: Request, res: Response) => {
+    sendSuccess(res, await gradeWorkflowService.returnForCorrection(req.params.sectionId!, req.body, actor(req)));
+  }),
+);
+gradesRouter.post(
+  "/sections/:sectionId/unlock",
+  requirePermission(PERMISSIONS.GRADE_UNLOCK),
+  asyncHandler(async (req: Request, res: Response) => {
+    sendSuccess(res, await gradeWorkflowService.unlock(req.params.sectionId!, actor(req)));
   }),
 );

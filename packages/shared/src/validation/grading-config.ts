@@ -5,6 +5,9 @@ import { z } from "zod";
 export const gradeComponentSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(60),
   weightPercent: z.coerce.number().min(0, "Weight must be 0 or more.").max(100),
+  // The raw mark ceiling for this component, e.g. "out of 25". Instructors enter
+  // marks against this max; the % conversion happens internally.
+  maxScore: z.coerce.number().min(1, "Max score must be at least 1.").max(1000),
   sequence: z.coerce.number().int().min(0).default(0),
   isActive: z.boolean().default(true),
 });
