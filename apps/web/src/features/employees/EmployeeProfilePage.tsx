@@ -2,7 +2,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Loader2, Printer } from "lucide-react";
 import {
   EMPLOYMENT_TYPE_LABELS,
   EMPLOYMENT_STATUS_LABELS,
@@ -19,6 +19,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/toast/ToastProvider";
 import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
+import { getAccessToken } from "@/lib/api-client";
 import { employeesApi, type EmployeeDetail } from "./api";
 import { EmployeeForm, type EmployeeFormValues } from "./EmployeeForm";
 import { SubRecordSection } from "./SubRecordSection";
@@ -64,6 +65,31 @@ export function EmployeeProfilePage(): JSX.Element {
   const { hasPermission } = useAuth();
   const canUpdate = hasPermission("employee:update");
   const canDelete = hasPermission("employee:delete");
+  const canPrint = hasPermission("employee:print");
+
+  function openPrint(): void {
+    // Opens the server-rendered A4 profile (with QR) in a new tab; the user then
+    // uses the browser's Print / Save-as-PDF.
+    const token = getAccessToken();
+    // The print endpoint needs auth; fetch it then open as a blob URL.
+    void (async () => {
+      const res = await fetch(`/api/v1/employees/${id}/print`, {
+        headers: { Authorization: `Bearer ${token ?? ""}` },
+        credentials: "include",
+      });
+      if (!res.ok) {
+        toast.error("Could not generate the printable profile.");
+        return;
+      }
+      const html = await res.text();
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      }
+    })();
+  }
 
   const [tab, setTab] = useState<Tab>("personal");
   const [editOpen, setEditOpen] = useState(false);
@@ -142,6 +168,11 @@ export function EmployeeProfilePage(): JSX.Element {
           </div>
         </div>
         <div className="flex gap-2">
+          {canPrint && (
+            <Button variant="secondary" onClick={openPrint}>
+              <Printer className="h-4 w-4" /> Print
+            </Button>
+          )}
           {canUpdate && (
             <Button variant="secondary" onClick={() => setEditOpen(true)}>
               <Pencil className="h-4 w-4" /> Edit

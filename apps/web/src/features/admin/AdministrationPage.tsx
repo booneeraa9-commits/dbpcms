@@ -4,21 +4,24 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/AuthContext";
 import { UsersTab } from "./UsersTab";
 import { AuditLogsTab } from "./AuditLogsTab";
+import { SettingsTab } from "./SettingsTab";
 
 /**
- * Administration hub: User & Role management and the read-only Audit-log viewer.
- * Tabs are shown based on the current user's permissions.
+ * Administration hub: User & Role management, the read-only Audit-log viewer,
+ * and System Settings. Tabs are shown based on the current user's permissions.
  */
-type Tab = "users" | "audit";
+type Tab = "users" | "audit" | "settings";
 
 export function AdministrationPage(): JSX.Element {
   const { hasPermission } = useAuth();
   const canUsers = hasPermission("user:read");
   const canAudit = hasPermission("audit-log:read");
+  const canSettings = hasPermission("system-setting:manage");
 
   const tabs: { id: Tab; label: string; show: boolean }[] = [
     { id: "users", label: "Users & Roles", show: canUsers },
     { id: "audit", label: "Audit Log", show: canAudit },
+    { id: "settings", label: "System Settings", show: canSettings },
   ];
   const firstVisible = tabs.find((t) => t.show)?.id ?? "users";
   const [tab, setTab] = useState<Tab>(firstVisible);
@@ -56,6 +59,7 @@ export function AdministrationPage(): JSX.Element {
 
       {tab === "users" && canUsers && <UsersTab />}
       {tab === "audit" && canAudit && <AuditLogsTab />}
+      {tab === "settings" && canSettings && <SettingsTab />}
     </div>
   );
 }

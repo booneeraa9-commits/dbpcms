@@ -18,6 +18,8 @@ import {
   ROLE_DESCRIPTIONS,
   ROLE_PERMISSIONS,
   ROLES,
+  SETTING_DEFAULTS,
+  SETTING_DESCRIPTIONS,
 } from "@dbpcms/shared";
 
 // Load apps/api/.env so DATABASE_URL and the admin credentials are available.
@@ -105,6 +107,22 @@ async function main(): Promise<void> {
   });
 
   console.log(`  • Admin ready: ${adminEmail} (must change password on first login)`);
+
+  // 4) Default system settings ---------------------------------------------
+  const settingKeys = Object.keys(SETTING_DEFAULTS) as (keyof typeof SETTING_DEFAULTS)[];
+  console.log(`  • Ensuring ${settingKeys.length} system settings…`);
+  for (const key of settingKeys) {
+    await prisma.systemSetting.upsert({
+      where: { key },
+      update: {}, // never overwrite an admin's changed value on re-seed
+      create: {
+        key,
+        value: SETTING_DEFAULTS[key],
+        description: SETTING_DESCRIPTIONS[key],
+      },
+    });
+  }
+
   console.log("Seeding complete. ✔");
 }
 

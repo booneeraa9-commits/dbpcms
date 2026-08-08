@@ -13,6 +13,8 @@ import {
   emergencyRouter,
 } from "./subrecords.routes.js";
 import { documentsRouter } from "../documents/documents.routes.js";
+import { buildEmployeeProfileHtml } from "./profile-print.js";
+import { env } from "../../config/env.js";
 
 function actor(req: Request) {
   return {
@@ -48,6 +50,24 @@ employeesRouter.get(
   requirePermission(PERMISSIONS.EMPLOYEE_READ),
   asyncHandler(async (req: Request, res: Response) => {
     sendSuccess(res, await employeesService.getById(req.params.id!));
+  }),
+);
+
+// Printable A4 profile (HTML with a QR verification code). The browser's print
+// dialog turns it into a PDF. Requires the print permission.
+employeesRouter.get(
+  "/:id/print",
+  requirePermission(PERMISSIONS.EMPLOYEE_PRINT),
+  asyncHandler(async (req: Request, res: Response) => {
+    // Public base URL for the verify link/QR = the first allowed CORS origin.
+    const publicBaseUrl = env.CORS_ORIGINS[0] ?? "http://localhost:5173";
+    const html = await buildEmployeeProfileHtml(
+      req.params.id!,
+      publicBaseUrl,
+      req.auth!.userId,
+    );
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
   }),
 );
 

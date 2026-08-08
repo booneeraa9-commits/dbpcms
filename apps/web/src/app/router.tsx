@@ -7,6 +7,8 @@ import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
 import { EmployeeProfilePage } from "@/features/employees/EmployeeProfilePage";
 import { AcademicPage } from "@/features/academic/AcademicPage";
 import { AdministrationPage } from "@/features/admin/AdministrationPage";
+import { ReportsPage } from "@/features/reports/ReportsPage";
+import { VerifyPage } from "@/features/verify/VerifyPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ChangePasswordPage } from "@/features/auth/ChangePasswordPage";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
@@ -19,6 +21,8 @@ import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
  */
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  // Public document verification (no login required).
+  { path: "/verify", element: <VerifyPage /> },
   {
     element: <ProtectedRoute />,
     children: [
@@ -33,6 +37,7 @@ export const router = createBrowserRouter([
           { path: "grading", element: <PlaceholderPage title="Grading" /> },
           { path: "departments", element: <DepartmentsPage /> },
           { path: "academic", element: <AcademicPage /> },
+          { path: "reports", element: <ReportsPage /> },
           { path: "admin", element: <AdministrationPage /> },
           { path: "*", element: <PlaceholderPage title="Page not found" /> },
         ],

@@ -370,6 +370,37 @@ model EmployeeNumberSequence {
   @@map("employee_number_sequences")
 }
 
+/// Admin-editable configuration, stored as key/value so business rules (e.g.
+/// retirement age, contract-expiry window) can change WITHOUT code changes.
+model SystemSetting {
+  key         String  @id
+  value       String
+  description String?
+  updatedBy   String? @map("updated_by") @db.Uuid
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+/// A verification record for an officially issued/printed document. The public
+/// verification lookup checks a code here to confirm a printout is genuine.
+model DocumentVerification {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique // short human-readable code, also encoded in the QR
+  documentKind String   @map("document_kind") // "employee_profile" (future: "transcript", ...)
+  subjectType  String   @map("subject_type") // "employee"
+  subjectId    String   @map("subject_id") @db.Uuid
+  subjectLabel String   @map("subject_label") // e.g. name + employee number, for display
+  issuedBy     String?  @map("issued_by") @db.Uuid
+  revokedAt    DateTime? @map("revoked_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([subjectType, subjectId])
+  @@map("document_verifications")
+}
+
 /// Metadata for an uploaded file. The actual bytes live in the storage provider
 /// (local disk now, cloud later) referenced by storageKey. ownerType/ownerId
 /// make this table reusable for students, etc., in future modules.

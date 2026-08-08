@@ -8,6 +8,9 @@ import { semestersRouter } from "./modules/semesters/semesters.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
 import { auditLogsRouter } from "./modules/audit-logs/audit-logs.routes.js";
 import { employeesRouter } from "./modules/employees/employees.routes.js";
+import { settingsRouter } from "./modules/settings/settings.routes.js";
+import { reportsRouter } from "./modules/reports/reports.routes.js";
+import { verificationRouter } from "./modules/verification/verification.routes.js";
 
 /**
  * The API v1 router. Every module registers its routes here under /api/v1.
@@ -24,6 +27,10 @@ apiV1Router.use("/semesters", semestersRouter);
 apiV1Router.use("/users", usersRouter);
 apiV1Router.use("/audit-logs", auditLogsRouter);
 apiV1Router.use("/employees", employeesRouter);
+apiV1Router.use("/settings", settingsRouter);
+apiV1Router.use("/reports", reportsRouter);
+// Public (no auth) verification lookup.
+apiV1Router.use("/verify", verificationRouter);
 
 // Future modules will be mounted here, e.g.:
 // apiV1Router.use("/employees", employeeRouter);
