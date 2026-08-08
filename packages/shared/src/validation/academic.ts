@@ -16,6 +16,7 @@ export const departmentCreateSchema = z.object({
     .regex(/^[A-Za-z0-9-]+$/, "Code may contain only letters, numbers, and hyphens.")
     .transform((v) => v.toUpperCase()),
   description: z.string().trim().max(500).optional().or(z.literal("")),
+  headUserId: z.string().uuid().optional().or(z.literal("")),
   isActive: z.boolean().default(true),
 });
 export type DepartmentCreateInput = z.infer<typeof departmentCreateSchema>;

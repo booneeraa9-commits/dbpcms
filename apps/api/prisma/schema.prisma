@@ -143,6 +143,7 @@ model Department {
   name        String
   code        String  @unique
   description String?
+  headUserId  String? @map("head_user_id") @db.Uuid
   isActive    Boolean @default(true) @map("is_active")
 
   programs  Program[]
@@ -521,6 +522,7 @@ model Section {
 
   instructors InstructorAssignment[]
   enrollments Enrollment[]
+  gradeSubmission GradeSubmission?
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -562,6 +564,9 @@ model Enrollment {
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  gradeEntries GradeEntry[]
+  gradeResult  GradeResult?
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -629,6 +634,8 @@ model GradeComponent {
   departmentId   String? @map("department_id") @db.Uuid // null = college-wide
   isActive       Boolean @default(true) @map("is_active")
 
+  gradeEntries GradeEntry[]
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   createdBy String?   @map("created_by") @db.Uuid
@@ -637,6 +644,78 @@ model GradeComponent {
 
   @@index([departmentId])
   @@map("grade_components")
+}
+
+// ============================================================================
+// GRADE ENTRY & WORKFLOW (Phase 7)
+// ============================================================================
+
+/// The workflow state of one section's grades. Drives the approval chain.
+model GradeSubmission {
+  id        String @id @default(uuid()) @db.Uuid
+  sectionId String @unique @map("section_id") @db.Uuid
+  /// draft | submitted | dept_approved | published | returned
+  status    String @default("draft")
+
+  submittedBy   String?   @map("submitted_by") @db.Uuid
+  submittedAt   DateTime? @map("submitted_at")
+  approvedBy    String?   @map("approved_by") @db.Uuid
+  approvedAt    DateTime? @map("approved_at")
+  publishedBy   String?   @map("published_by") @db.Uuid
+  publishedAt   DateTime? @map("published_at")
+  lockedAt      DateTime? @map("locked_at")
+  returnedBy    String?   @map("returned_by") @db.Uuid
+  returnReason  String?   @map("return_reason")
+
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("grade_submissions")
+}
+
+/// A single score: one component's mark for one enrollment (student in section).
+model GradeEntry {
+  id           String  @id @default(uuid()) @db.Uuid
+  enrollmentId String  @map("enrollment_id") @db.Uuid
+  componentId  String  @map("component_id") @db.Uuid
+  score        Float
+  maxScore     Float   @map("max_score")
+
+  enrollment Enrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  component  GradeComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  enteredBy String?  @map("entered_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([enrollmentId, componentId])
+  @@index([enrollmentId])
+  @@map("grade_entries")
+}
+
+/// The computed outcome per enrollment. Frozen snapshot fields are filled on
+/// publish (Phase 7B) so historical results never change if policy changes.
+model GradeResult {
+  id           String @id @default(uuid()) @db.Uuid
+  enrollmentId String @unique @map("enrollment_id") @db.Uuid
+
+  percentage Float?
+  letter     String?
+  gradePoint Float?  @map("grade_point")
+  isPass     Boolean? @map("is_pass")
+
+  /// Immutable snapshot captured at publish time (JSON).
+  appliedSnapshot Json? @map("applied_snapshot")
+  publishedAt     DateTime? @map("published_at")
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("grade_results")
 }
 
 /// Append-only diary of critical actions: who did what, when, from where.

@@ -8,6 +8,7 @@ import { EmployeeProfilePage } from "@/features/employees/EmployeeProfilePage";
 import { AcademicPage } from "@/features/academic/AcademicPage";
 import { StudentsPage } from "@/features/students/StudentsPage";
 import { GradingConfigPage } from "@/features/grading-config/GradingConfigPage";
+import { GradeEntryPage } from "@/features/grades/GradeEntryPage";
 import { AdministrationPage } from "@/features/admin/AdministrationPage";
 import { ReportsPage } from "@/features/reports/ReportsPage";
 import { VerifyPage } from "@/features/verify/VerifyPage";
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
           { path: "departments", element: <DepartmentsPage /> },
           { path: "students", element: <StudentsPage /> },
           { path: "academic", element: <AcademicPage /> },
+          { path: "grade-entry", element: <GradeEntryPage /> },
           { path: "grading-config", element: <GradingConfigPage /> },
           { path: "reports", element: <ReportsPage /> },
           { path: "admin", element: <AdministrationPage /> },

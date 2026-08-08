@@ -54,6 +54,7 @@ export const departmentsService = {
       name: input.name,
       code: input.code,
       description: input.description || null,
+      headUserId: input.headUserId || null,
       isActive: input.isActive,
       createdBy: actor.userId,
       updatedBy: actor.userId,
@@ -90,6 +91,7 @@ export const departmentsService = {
         ? { description: input.description || null }
         : {}),
       ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+      ...(input.headUserId !== undefined ? { headUserId: input.headUserId || null } : {}),
       updatedBy: actor.userId,
       version: { increment: 1 },
     });

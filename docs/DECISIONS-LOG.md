@@ -83,3 +83,12 @@ Each entry: the decision, who decided, date, and the consequence for the build.
 - Default components: Quiz 10%, Assignment 15%, Mid Exam 25%, Final Exam 50% (sum 100).
 - Rounding: round half up (84.5 -> 85) before band match. Configurable.
 - All of the above editable via UI config screens (grading scale editor, components editor, GPA rule).
+
+---
+
+## Phase 7 grading workflow decisions
+- Approval chain (full): Instructor enters -> Submits -> Department Head approves -> Registrar publishes -> LOCKED.
+- Approvers (Dept Head, Registrar) can RETURN a grade sheet to the instructor for correction with a reason.
+- Who can ENTER marks: the assigned instructor(s) AND the Department Head of that section's department.
+- On publish: freeze an immutable snapshot (scale bands + component weights + rounding + pass mark) with each result.
+- Delivery split: 7A = grade-entry grid (enter/save draft + live computed result). 7B = submit/approve/return/publish/lock + change requests.
