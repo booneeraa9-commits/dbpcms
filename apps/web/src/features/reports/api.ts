@@ -1,9 +1,6 @@
 import { api, getAccessToken } from "@/lib/api-client";
 
-export interface ReportColumn {
-  header: string;
-  key: string;
-}
+export interface ReportColumn { header: string; key: string }
 export interface ReportData {
   title: string;
   columns: ReportColumn[];
@@ -12,22 +9,22 @@ export interface ReportData {
   institution?: string;
 }
 
+/** group is "hr" or "academic" — matches the backend /reports/<group>/<key> route. */
 export const reportsApi = {
-  /** Fetch a report as JSON to preview on screen. */
-  view: (reportKey: string, filters: Record<string, string> = {}) => {
+  view: (group: string, reportKey: string, filters: Record<string, string> = {}) => {
     const q = new URLSearchParams(filters);
-    return api.get<ReportData>(`/reports/hr/${reportKey}?${q.toString()}`);
+    return api.get<ReportData>(`/reports/${group}/${reportKey}?${q.toString()}`);
   },
 };
 
-/** Trigger a browser download of an exported report. */
 export async function downloadReport(
+  group: string,
   reportKey: string,
   format: "pdf" | "excel" | "csv",
   filters: Record<string, string> = {},
 ): Promise<void> {
   const q = new URLSearchParams({ ...filters, format });
-  const res = await fetch(`/api/v1/reports/hr/${reportKey}?${q.toString()}`, {
+  const res = await fetch(`/api/v1/reports/${group}/${reportKey}?${q.toString()}`, {
     headers: { Authorization: `Bearer ${getAccessToken() ?? ""}` },
     credentials: "include",
   });
@@ -38,10 +35,7 @@ export async function downloadReport(
   const filename = nameMatch?.[1] ?? `${reportKey}.${format === "excel" ? "xlsx" : format}`;
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }

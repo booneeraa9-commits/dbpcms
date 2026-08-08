@@ -48,6 +48,7 @@ export const PERMISSIONS = {
   GRADE_PUBLISH: "grade:publish",
   GRADE_UNLOCK: "grade:unlock",
   GRADING_CONFIG: "grading:config",
+  TRANSCRIPT_GENERATE: "transcript:generate",
 
   // Reports & analytics
   REPORT_VIEW: "report:view",

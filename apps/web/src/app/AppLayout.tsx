@@ -10,6 +10,7 @@ import {
   Building2,
   BookOpen,
   BarChart3,
+  ScrollText,
   ShieldCheck,
   Menu,
   Bell,
@@ -40,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Grading Setup", to: "/grading-config", icon: GraduationCap, permission: PERMISSIONS.GRADING_CONFIG },
   { label: "Departments", to: "/departments", icon: Building2, permission: PERMISSIONS.DEPARTMENT_READ },
   { label: "Academic", to: "/academic", icon: BookOpen, permission: PERMISSIONS.PROGRAM_READ },
+  { label: "Transcripts", to: "/transcripts", icon: ScrollText, permission: PERMISSIONS.TRANSCRIPT_GENERATE },
   { label: "Reports", to: "/reports", icon: BarChart3, permission: PERMISSIONS.REPORT_VIEW },
   { label: "Administration", to: "/admin", icon: ShieldCheck, permission: PERMISSIONS.USER_READ },
 ];

@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans dark:bg-gray-900 dark:text-gray-100;
+  }
+  /* Smooth focus rings for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
+  }
+
+  /* Dark mode adjustments */
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  /* ─── Buttons ─── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium
+           transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50
+           focus-visible:ring-primary-500
+           dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700;
+  }
+  .btn-danger {
+    @apply btn bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger-500;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-700 hover:bg-gray-100
+           dark:text-gray-200 dark:hover:bg-gray-700;
+  }
+
+  /* ─── Form fields ─── */
+  .form-input {
+    @apply block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm
+           placeholder:text-gray-400 text-gray-900
+           focus:border-primary-500 focus:ring-1 focus:ring-primary-500
+           disabled:bg-gray-50 disabled:text-gray-500
+           dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder:text-gray-500
+           dark:focus:border-primary-400 dark:focus:ring-primary-400
+           dark:disabled:bg-gray-900 dark:disabled:text-gray-500;
+  }
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5 dark:text-gray-300;
+  }
+  .form-error {
+    @apply text-sm text-danger-600 mt-1 dark:text-danger-400;
+  }
+
+  /* ─── Cards ─── */
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white shadow-card
+           dark:border-gray-700 dark:bg-gray-800 dark:shadow-none;
+  }
+  .card-header {
+    @apply px-5 py-4 border-b border-gray-200 dark:border-gray-700;
+  }
+  .card-body {
+    @apply p-5;
+  }
+
+  /* ─── Tables ─── */
+  .table-wrapper {
+    @apply overflow-x-auto rounded-lg border border-gray-200 bg-white
+           dark:border-gray-700 dark:bg-gray-800;
+  }
+  .table {
+    @apply w-full text-sm;
+  }
+  .table thead {
+    @apply bg-gray-50 text-gray-700 dark:bg-gray-900/40 dark:text-gray-300;
+  }
+  .table th {
+    @apply px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider;
+  }
+  .table td {
+    @apply px-4 py-3 border-t border-gray-100 dark:border-gray-700;
+  }
+  .table tbody tr {
+    @apply hover:bg-gray-50 dark:hover:bg-gray-700/50;
+  }
+
+  /* ─── Badges ─── */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-success { @apply badge bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400; }
+  .badge-warning { @apply badge bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400; }
+  .badge-danger { @apply badge bg-danger-50 text-danger-700 dark:bg-danger-500/10 dark:text-danger-400; }
+  .badge-info { @apply badge bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400; }
+  .badge-gray { @apply badge bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { @apply w-2 h-2; }
+::-webkit-scrollbar-track { @apply bg-gray-100 dark:bg-gray-800; }
+::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full dark:bg-gray-600; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-400 dark:bg-gray-500; }

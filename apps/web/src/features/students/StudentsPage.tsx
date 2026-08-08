@@ -18,6 +18,7 @@ import { useToast } from "@/components/toast/ToastProvider";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/lib/api-client";
 import { studentsApi, optionsApi, type Student } from "./api";
+import { StudentPhoto } from "./StudentPhoto";
 
 const PAGE_SIZE = 10;
 const STATUS_COLORS: Record<string, string> = {
@@ -139,6 +140,12 @@ export function StudentsPage(): JSX.Element {
 
       <Modal open={formOpen} title={editing ? "Edit student" : "Register student"} onClose={() => setFormOpen(false)}>
         <form onSubmit={submit} noValidate className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+          {editing && (
+            <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+              <p className="mb-2 text-xs uppercase tracking-wide text-slate-400">Photo (used on transcript)</p>
+              <StudentPhoto studentId={editing.id} firstName={editing.firstName} lastName={editing.lastName} canEdit={canManage} />
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input id="firstName" label="First name" value={f.firstName ?? ""} onChange={set("firstName")} error={errors.firstName} />
             <Input id="middleName" label="Middle name (optional)" value={f.middleName ?? ""} onChange={set("middleName")} />

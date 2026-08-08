@@ -1,0 +1,719 @@
+// ──────────────────────────────────────────────────────
+// DBPCMS Prisma Schema
+// Includes: Identity, Academic Structure, Students, Questions, Exams, Results
+// ──────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════════════════════
+// Enums
+// ══════════════════════════════════════════════════════
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  LOCKED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum StudentStatus {
+  ACTIVE
+  GRADUATED
+  SUSPENDED
+  WITHDRAWN
+  TRANSFERRED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  MATCHING
+  SHORT_ANSWER
+  ESSAY
+  PRACTICAL
+}
+
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum BloomsLevel {
+  REMEMBER
+  UNDERSTAND
+  APPLY
+  ANALYZE
+  EVALUATE
+  CREATE
+}
+
+enum QuestionStatus {
+  DRAFT
+  PENDING_REVIEW
+  PENDING_APPROVAL
+  ACTIVE
+  RETIRED
+  REJECTED
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ResultStatus {
+  DRAFT
+  PENDING_VERIFICATION
+  PENDING_APPROVAL
+  PENDING_AUTHORIZATION
+  PUBLISHED
+}
+
+enum AssessmentType {
+  EXAM
+  ASSIGNMENT
+  PRACTICAL
+  PROJECT
+}
+
+enum CompetencyAssessment {
+  COMPETENT
+  NOT_YET_COMPETENT
+}
+
+enum ActivityAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_CHANGE
+  PASSWORD_RESET_REQUEST
+  PASSWORD_RESET_COMPLETE
+  PERMISSION_GRANT
+  PERMISSION_REVOKE
+  ROLE_ASSIGN
+  ROLE_UNASSIGN
+  EXPORT
+  IMPORT
+  APPROVE
+  REJECT
+  PUBLISH
+  VERIFY
+  AUTHORIZE
+  OTHER
+}
+
+// ══════════════════════════════════════════════════════
+// IDENTITY & ACCESS
+// ══════════════════════════════════════════════════════
+
+model User {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  passwordHash      String      @map("password_hash")
+  firstName         String      @map("first_name") @db.VarChar(100)
+  lastName          String      @map("last_name") @db.VarChar(100)
+  phone             String?     @db.VarChar(20)
+  avatarUrl         String?     @map("avatar_url")
+  status            UserStatus  @default(ACTIVE)
+
+  emailVerified     Boolean     @default(false) @map("email_verified")
+  emailVerifiedAt   DateTime?   @map("email_verified_at")
+  failedLoginCount  Int         @default(0) @map("failed_login_count")
+  lockedUntil       DateTime?   @map("locked_until")
+  lastLoginAt       DateTime?   @map("last_login_at")
+  lastLoginIp       String?     @map("last_login_ip")
+  passwordChangedAt DateTime?   @map("password_changed_at")
+  mustChangePassword Boolean    @default(false) @map("must_change_password")
+
+  twoFactorEnabled  Boolean     @default(false) @map("two_factor_enabled")
+  twoFactorSecret   String?     @map("two_factor_secret")
+
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+  deletedAt         DateTime?   @map("deleted_at")
+
+  userRoles         UserRole[]
+  refreshTokens     RefreshToken[]
+  activityLogs      ActivityLog[]
+  sessions          UserSession[]
+  passwordResets    PasswordReset[]
+  createdQuestions  Question[]   @relation("QuestionCreator")
+  reviewedQuestions Question[]   @relation("QuestionReviewer")
+  approvedQuestions Question[]   @relation("QuestionApprover")
+  teacherCourses    CourseAssignment[]
+
+  @@index([email])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  slug        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  slug        String   @unique @db.VarChar(100)
+  resource    String   @db.VarChar(50)
+  action      String   @db.VarChar(50)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+
+  @@index([resource, action])
+  @@map("permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  grantedAt DateTime @default(now()) @map("granted_at")
+  grantedBy String?  @map("granted_by")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  grantedAt    DateTime @default(now()) @map("granted_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  tokenHash    String   @unique @map("token_hash") @db.VarChar(255)
+  userAgent    String?  @map("user_agent") @db.Text
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  expiresAt    DateTime @map("expires_at")
+  revokedAt    DateTime? @map("revoked_at")
+  revokedReason String? @map("revoked_reason") @db.VarChar(100)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model UserSession {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  ipAddress      String?  @map("ip_address") @db.VarChar(45)
+  userAgent      String?  @map("user_agent") @db.Text
+  device         String?  @db.VarChar(100)
+  browser        String?  @db.VarChar(100)
+  os             String?  @db.VarChar(100)
+  city           String?  @db.VarChar(100)
+  country        String?  @db.VarChar(100)
+  isActive       Boolean  @default(true) @map("is_active")
+  lastActivityAt DateTime @default(now()) @map("last_activity_at")
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  loggedOutAt    DateTime? @map("logged_out_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("user_sessions")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_resets")
+}
+
+model ActivityLog {
+  id          String         @id @default(uuid())
+  userId      String?        @map("user_id")
+  action      ActivityAction
+  resource    String?        @db.VarChar(50)
+  resourceId  String?        @map("resource_id")
+  description String?        @db.Text
+  ipAddress   String?        @map("ip_address") @db.VarChar(45)
+  userAgent   String?        @map("user_agent") @db.Text
+  metadata    Json?
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ══════════════════════════════════════════════════════
+// ACADEMIC STRUCTURE
+// ══════════════════════════════════════════════════════
+
+model Department {
+  id          String   @id @default(uuid())
+  code        String   @unique @db.VarChar(20)
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  headId      String?  @map("head_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  programs Program[]
+  courses  Course[]
+
+  @@index([code])
+  @@index([deletedAt])
+  @@map("departments")
+}
+
+model Program {
+  id             String   @id @default(uuid())
+  departmentId   String   @map("department_id")
+  code           String   @db.VarChar(20)
+  name           String   @db.VarChar(200)
+  description    String?  @db.Text
+  durationYears  Int      @default(3) @map("duration_years")
+  totalCredits   Int      @default(0) @map("total_credits")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  department   Department      @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  occupations  ProgramOccupation[]
+  levels       ProgramLevel[]
+  students     Student[]
+  courses      Course[]
+
+  @@unique([departmentId, code])
+  @@index([deletedAt])
+  @@map("programs")
+}
+
+model Occupation {
+  id          String   @id @default(uuid())
+  code        String   @unique @db.VarChar(30)
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  programs ProgramOccupation[]
+
+  @@index([deletedAt])
+  @@map("occupations")
+}
+
+// Many-to-many: which occupations a program offers
+model ProgramOccupation {
+  programId    String @map("program_id")
+  occupationId String @map("occupation_id")
+
+  program    Program    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  occupation Occupation @relation(fields: [occupationId], references: [id], onDelete: Cascade)
+
+  @@id([programId, occupationId])
+  @@index([occupationId])
+  @@map("program_occupations")
+}
+
+// Many-to-many: which levels a program covers
+model ProgramLevel {
+  programId String @map("program_id")
+  level     Int    // 1, 2, 3, 4, 5
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@id([programId, level])
+  @@map("program_levels")
+}
+
+model Course {
+  id            String   @id @default(uuid())
+  departmentId  String   @map("department_id")
+  programId     String?  @map("program_id")
+  code          String   @db.VarChar(30)
+  name          String   @db.VarChar(200)
+  description   String?  @db.Text
+  level         Int      // 1, 2, 3, 4, 5
+  credits       Int      @default(3)
+  theoryHours   Int      @default(0) @map("theory_hours")
+  practicalHours Int     @default(0) @map("practical_hours")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  department  Department         @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  program     Program?           @relation(fields: [programId], references: [id], onDelete: SetNull)
+  competencies CourseCompetency[]
+  questions   Question[]
+  assignments  CourseAssignment[]
+  exams       Exam[]
+
+  @@unique([departmentId, code])
+  @@index([programId])
+  @@index([level])
+  @@index([deletedAt])
+  @@map("courses")
+}
+
+model Competency {
+  id          String   @id @default(uuid())
+  code        String   @unique @db.VarChar(30)
+  name        String   @db.VarChar(200)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  courses CourseCompetency[]
+
+  @@index([deletedAt])
+  @@map("competencies")
+}
+
+model CourseCompetency {
+  courseId     String @map("course_id")
+  competencyId String @map("competency_id")
+
+  course     Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  competency Competency @relation(fields: [competencyId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, competencyId])
+  @@index([competencyId])
+  @@map("course_competencies")
+}
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  name      String   @unique @db.VarChar(50) // e.g. "2025/2026"
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  isCurrent Boolean  @default(false) @map("is_current")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  semesters Semester[]
+  registrations StudentRegistration[]
+
+  @@map("academic_years")
+}
+
+model Semester {
+  id              String   @id @default(uuid())
+  academicYearId  String   @map("academic_year_id")
+  name            String   @db.VarChar(50) // e.g. "Semester 1"
+  number          Int      // 1 or 2
+  startDate       DateTime @map("start_date") @db.Date
+  endDate         DateTime @map("end_date") @db.Date
+  isCurrent       Boolean  @default(false) @map("is_current")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  academicYear AcademicYear         @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  exams        Exam[]
+  results      Result[]
+
+  @@unique([academicYearId, number])
+  @@map("semesters")
+}
+
+model CourseAssignment {
+  id              String   @id @default(uuid())
+  courseId        String   @map("course_id")
+  teacherId       String   @map("teacher_id")
+  academicYearId  String   @map("academic_year_id")
+  semesterId      String?  @map("semester_id")
+  section         String?  @db.VarChar(20) // e.g. "A", "B"
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher      User         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, teacherId, academicYearId, semesterId, section])
+  @@index([teacherId])
+  @@index([academicYearId])
+  @@map("course_assignments")
+}
+
+// ══════════════════════════════════════════════════════
+// STUDENTS
+// ══════════════════════════════════════════════════════
+
+model Student {
+  id              String        @id @default(uuid())
+  studentIdNumber String        @unique @map("student_id_number") @db.VarChar(30)
+  firstName       String        @map("first_name") @db.VarChar(100)
+  lastName        String        @map("last_name") @db.VarChar(100)
+  middleName      String?       @map("middle_name") @db.VarChar(100)
+  gender          Gender
+  birthDate       DateTime      @map("birth_date") @db.Date
+  nationalId      String?       @map("national_id") @db.VarChar(50) // Fayda number
+  phone           String?       @db.VarChar(20)
+  email           String?       @db.VarChar(255)
+  address         String?       @db.Text
+  photoUrl        String?       @map("photo_url")
+  qrCodeUrl       String?       @map("qr_code_url")
+
+  // Family
+  guardianName    String?       @map("guardian_name") @db.VarChar(200)
+  guardianPhone   String?       @map("guardian_phone") @db.VarChar(20)
+  emergencyContactName  String? @map("emergency_contact_name") @db.VarChar(200)
+  emergencyContactPhone String? @map("emergency_contact_phone") @db.VarChar(20)
+
+  // Previous education
+  previousSchool  String?       @map("previous_school") @db.VarChar(200)
+  previousGrade   String?       @map("previous_grade") @db.VarChar(50)
+
+  // Permanent assignment
+  programId       String        @map("program_id")
+  admissionDate   DateTime      @map("admission_date") @db.Date
+  status          StudentStatus @default(ACTIVE)
+  statusUpdatedAt DateTime?     @map("status_updated_at")
+
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
+
+  program      Program              @relation(fields: [programId], references: [id], onDelete: Restrict)
+  registrations StudentRegistration[]
+  results      Result[]
+
+  @@index([studentIdNumber])
+  @@index([lastName, firstName])
+  @@index([programId])
+  @@index([deletedAt])
+  @@map("students")
+}
+
+// Yearly enrollment — a student can be re-registered each year
+model StudentRegistration {
+  id              String   @id @default(uuid())
+  studentId       String   @map("student_id")
+  academicYearId  String   @map("academic_year_id")
+  level           Int      // The level they're in this year
+  section         String?  @db.VarChar(20)
+  rollNumber      String?  @map("roll_number") @db.VarChar(20)
+  registeredAt    DateTime @default(now()) @map("registered_at")
+  registeredBy    String?  @map("registered_by")
+  isActive        Boolean  @default(true) @map("is_active")
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, academicYearId])
+  @@index([academicYearId])
+  @@index([level])
+  @@map("student_registrations")
+}
+
+// ══════════════════════════════════════════════════════
+// QUESTION BANK
+// ══════════════════════════════════════════════════════
+
+model Question {
+  id              String        @id @default(uuid())
+  courseId        String        @map("course_id")
+  type            QuestionType
+  difficulty      DifficultyLevel
+  bloomsLevel    BloomsLevel   @map("blooms_level")
+  marks           Decimal       @db.Decimal(6, 2)
+  content         Json         // { text, options?, correctAnswer?, explanation? }
+  keywords        String[]
+  attachments     Json?        // [{ name, url, type, size }]
+  status          QuestionStatus @default(DRAFT)
+  rejectionReason String?       @map("rejection_reason") @db.Text
+  timesUsed       Int           @default(0) @map("times_used")
+  lastUsedAt      DateTime?     @map("last_used_at")
+  version         Int           @default(1)
+  parentId        String?       @map("parent_id") // For version history
+  createdById     String        @map("created_by_id")
+  reviewedById    String?       @map("reviewed_by_id")
+  approvedById    String?       @map("approved_by_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
+
+  course       Course      @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  createdBy    User        @relation("QuestionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy   User?       @relation("QuestionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  approvedBy   User?       @relation("QuestionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  parent       Question?   @relation("QuestionVersions", fields: [parentId], references: [id], onDelete: SetNull)
+  versions     Question[]  @relation("QuestionVersions")
+  examQuestions ExamQuestion[]
+
+  @@index([courseId])
+  @@index([type])
+  @@index([difficulty])
+  @@index([status])
+  @@index([createdById])
+  @@index([deletedAt])
+  @@map("questions")
+}
+
+// ══════════════════════════════════════════════════════
+// EXAMS
+// ══════════════════════════════════════════════════════
+
+model Exam {
+  id              String     @id @default(uuid())
+  title           String     @db.VarChar(200)
+  courseId        String     @map("course_id")
+  semesterId      String     @map("semester_id")
+  durationMinutes Int        @map("duration_minutes")
+  totalMarks      Decimal    @map("total_marks") @db.Decimal(6, 2)
+  instructions    String?    @db.Text
+  difficultyDistribution Json? @map("difficulty_distribution") // { easy: 30, medium: 50, hard: 20 }
+  status          ExamStatus @default(DRAFT)
+  scheduledAt     DateTime?  @map("scheduled_at")
+  createdById     String     @map("created_by_id")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  publishedAt     DateTime?  @map("published_at")
+  archivedAt      DateTime?  @map("archived_at")
+
+  semester Semester @relation(fields: [semesterId], references: [id], onDelete: Restrict)
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  examQuestions ExamQuestion[]
+
+  @@index([courseId])
+  @@index([semesterId])
+  @@index([status])
+  @@map("exams")
+}
+
+model ExamQuestion {
+  id         String  @id @default(uuid())
+  examId     String  @map("exam_id")
+  questionId String  @map("question_id")
+  order      Int
+  marks      Decimal @db.Decimal(6, 2)
+
+  exam     Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([examId, questionId])
+  @@index([questionId])
+  @@map("exam_questions")
+}
+
+// ══════════════════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════════════════
+
+model Result {
+  id              String      @id @default(uuid())
+  studentId       String      @map("student_id")
+  semesterId      String      @map("semester_id")
+  courseId        String      @map("course_id")
+  assessmentType  AssessmentType @map("assessment_type")
+  marksObtained   Decimal     @map("marks_obtained") @db.Decimal(6, 2)
+  marksTotal      Decimal     @map("marks_total") @db.Decimal(6, 2)
+  competencyLevel CompetencyAssessment? @map("competency_level")
+  remarks         String?     @db.Text
+  status          ResultStatus @default(DRAFT)
+
+  enteredById     String?     @map("entered_by_id")
+  enteredAt       DateTime?   @map("entered_at")
+  verifiedById    String?     @map("verified_by_id")
+  verifiedAt      DateTime?   @map("verified_at")
+  approvedById    String?     @map("approved_by_id")
+  approvedAt      DateTime?   @map("approved_at")
+  authorizedById  String?     @map("authorized_by_id")
+  authorizedAt    DateTime?   @map("authorized_at")
+  publishedAt     DateTime?   @map("published_at")
+
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  semester Semester @relation(fields: [semesterId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, semesterId, courseId, assessmentType])
+  @@index([semesterId])
+  @@index([status])
+  @@map("results")
+}
+
+// ══════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════════════════════
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   @db.VarChar(50)
+  title     String   @db.VarChar(200)
+  message   String   @db.Text
+  data      Json?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, readAt])
+  @@index([createdAt])
+  @@map("notifications")
+}

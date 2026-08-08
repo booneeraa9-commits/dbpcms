@@ -7,6 +7,7 @@ import { asyncHandler } from "../../core/http/async-handler.js";
 import { sendSuccess } from "../../core/http/responses.js";
 import { ValidationError } from "../../core/errors/app-error.js";
 import { hrReportsService } from "./hr-reports.service.js";
+import { academicReportsService } from "./academic-reports.service.js";
 import { exportReport } from "../../core/reports/exporters.js";
 
 /**
@@ -34,6 +35,24 @@ reportsRouter.get(
       ]);
     }
 
+    const { data, contentType, filename } = await exportReport(report, format);
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(data);
+  }),
+);
+
+// Academic analytics reports (pass rate, top students, dept GPA, failure analysis).
+reportsRouter.get(
+  "/academic/:reportKey",
+  requirePermission(PERMISSIONS.ANALYTICS_VIEW),
+  asyncHandler(async (req: Request, res: Response) => {
+    const report = await academicReportsService.build(req.params.reportKey!);
+    const format = typeof req.query.format === "string" ? req.query.format : "json";
+    if (format === "json") { sendSuccess(res, report); return; }
+    if (format !== "pdf" && format !== "excel" && format !== "csv") {
+      throw new ValidationError([{ field: "format", message: "format must be json, pdf, excel, or csv." }]);
+    }
     const { data, contentType, filename } = await exportReport(report, format);
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
