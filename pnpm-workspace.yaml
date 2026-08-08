@@ -1,0 +1,5 @@
+# Declares which folders are part of this monorepo (pnpm "workspaces").
+# pnpm installs dependencies once and links our own packages together.
+packages:
+  - "apps/*"
+  - "packages/*"

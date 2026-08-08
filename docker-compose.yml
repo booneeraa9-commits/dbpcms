@@ -1,0 +1,26 @@
+# Runs a local PostgreSQL database in a container so you don't have to install
+# PostgreSQL directly on Windows. Start it with:  pnpm db:up
+# Stop it with:  pnpm db:down
+# Data persists in the named volume "dbpcms_pgdata" between restarts.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: dbpcms_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dbpcms
+      POSTGRES_PASSWORD: dbpcms_dev_password
+      POSTGRES_DB: dbpcms
+    ports:
+      # host:container — connect from your machine at localhost:5432
+      - "5432:5432"
+    volumes:
+      - dbpcms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbpcms -d dbpcms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dbpcms_pgdata:
