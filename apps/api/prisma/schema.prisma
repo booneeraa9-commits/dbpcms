@@ -267,6 +267,11 @@ model Employee {
   supervisor Employee?  @relation("EmployeeSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
   reports    Employee[] @relation("EmployeeSupervisor")
 
+  education         EmployeeEducation[]
+  qualifications    EmployeeQualification[]
+  employmentHistory EmploymentHistory[]
+  emergencyContacts EmergencyContact[]
+
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   createdBy String?   @map("created_by") @db.Uuid
@@ -279,6 +284,82 @@ model Employee {
   @@index([employmentStatus])
   @@index([lastName, firstName])
   @@map("employees")
+}
+
+/// One education entry for an employee (many per employee).
+model EmployeeEducation {
+  id             String  @id @default(uuid()) @db.Uuid
+  employeeId     String  @map("employee_id") @db.Uuid
+  institution    String
+  qualification  String
+  fieldOfStudy   String? @map("field_of_study")
+  graduationYear Int?    @map("graduation_year")
+  gpa            String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@map("employee_education")
+}
+
+/// A professional qualification: certification, license, workshop, training, or membership.
+model EmployeeQualification {
+  id           String    @id @default(uuid()) @db.Uuid
+  employeeId   String    @map("employee_id") @db.Uuid
+  type         String // certification | license | workshop | training | membership
+  title        String
+  issuer       String?
+  issueDate    DateTime? @map("issue_date") @db.Date
+  expiryDate   DateTime? @map("expiry_date") @db.Date
+  referenceNo  String?   @map("reference_no")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@map("employee_qualifications")
+}
+
+/// A previous-employment record (before joining the college).
+model EmploymentHistory {
+  id              String    @id @default(uuid()) @db.Uuid
+  employeeId      String    @map("employee_id") @db.Uuid
+  employer        String
+  position        String
+  startDate       DateTime? @map("start_date") @db.Date
+  endDate         DateTime? @map("end_date") @db.Date
+  responsibilities String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@map("employment_history")
+}
+
+/// An emergency contact for an employee (many per employee).
+model EmergencyContact {
+  id           String  @id @default(uuid()) @db.Uuid
+  employeeId   String  @map("employee_id") @db.Uuid
+  name         String
+  relationship String?
+  phoneNumber  String  @map("phone_number")
+  address      String?
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([employeeId])
+  @@map("emergency_contacts")
 }
 
 /// Per-year counter to generate sequential, never-reused employee numbers.

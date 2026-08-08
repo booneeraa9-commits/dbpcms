@@ -6,6 +6,12 @@ import { requirePermission } from "../../middleware/require-permission.js";
 import { asyncHandler } from "../../core/http/async-handler.js";
 import { sendList, sendSuccess } from "../../core/http/responses.js";
 import { employeesService } from "./employees.service.js";
+import {
+  educationRouter,
+  qualificationRouter,
+  historyRouter,
+  emergencyRouter,
+} from "./subrecords.routes.js";
 
 function actor(req: Request) {
   return {
@@ -17,6 +23,12 @@ function actor(req: Request) {
 
 export const employeesRouter = Router();
 employeesRouter.use(authenticate);
+
+// Nested sub-record routes (education, qualifications, history, contacts).
+employeesRouter.use("/:employeeId/education", educationRouter);
+employeesRouter.use("/:employeeId/qualifications", qualificationRouter);
+employeesRouter.use("/:employeeId/employment-history", historyRouter);
+employeesRouter.use("/:employeeId/emergency-contacts", emergencyRouter);
 
 employeesRouter.get(
   "/",

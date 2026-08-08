@@ -14,3 +14,4 @@ export * from "./validation/auth.js";
 export * from "./validation/academic.js";
 export * from "./validation/users.js";
 export * from "./validation/employees.js";
+export * from "./validation/employee-subrecords.js";

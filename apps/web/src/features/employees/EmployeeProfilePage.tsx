@@ -6,6 +6,12 @@ import { ArrowLeft, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   EMPLOYMENT_TYPE_LABELS,
   EMPLOYMENT_STATUS_LABELS,
+  educationSchema,
+  qualificationSchema,
+  employmentHistorySchema,
+  emergencyContactSchema,
+  QUALIFICATION_TYPES,
+  QUALIFICATION_TYPE_LABELS,
 } from "@dbpcms/shared";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -15,8 +21,25 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
 import { employeesApi, type EmployeeDetail } from "./api";
 import { EmployeeForm, type EmployeeFormValues } from "./EmployeeForm";
+import { SubRecordSection } from "./SubRecordSection";
+import type { SubRecord } from "./subrecords-api";
 
-type Tab = "personal" | "employment";
+type Tab =
+  | "personal"
+  | "employment"
+  | "education"
+  | "qualifications"
+  | "history"
+  | "contacts";
+
+function subDate(v: unknown): string {
+  return typeof v === "string" && v.length > 0
+    ? new Date(v).toLocaleDateString()
+    : "—";
+}
+function subText(v: unknown): string {
+  return typeof v === "string" && v.length > 0 ? v : "—";
+}
 
 function Field({ label, value }: { label: string; value?: string | null }): JSX.Element {
   return (
@@ -131,21 +154,28 @@ export function EmployeeProfilePage(): JSX.Element {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="overflow-x-auto border-b border-slate-200">
         <nav className="flex gap-1">
-          {(["personal", "employment"] as Tab[]).map((t) => (
+          {([
+            ["personal", "Personal"],
+            ["employment", "Employment"],
+            ["education", "Education"],
+            ["qualifications", "Qualifications"],
+            ["history", "Employment History"],
+            ["contacts", "Emergency Contacts"],
+          ] as [Tab, string][]).map(([id, label]) => (
             <button
-              key={t}
+              key={id}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => setTab(id)}
               className={cn(
-                "border-b-2 px-4 py-2 text-sm font-medium capitalize transition-colors",
-                tab === t
+                "whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors",
+                tab === id
                   ? "border-brand-600 text-brand-700"
                   : "border-transparent text-slate-500 hover:text-slate-800",
               )}
             >
-              {t}
+              {label}
             </button>
           ))}
         </nav>
@@ -184,6 +214,103 @@ export function EmployeeProfilePage(): JSX.Element {
             value={e.supervisor ? `${e.supervisor.firstName} ${e.supervisor.lastName}` : null}
           />
         </div>
+      )}
+
+      {tab === "education" && (
+        <SubRecordSection
+          employeeId={e.id}
+          path="education"
+          title="Education"
+          addLabel="Add education"
+          schema={educationSchema}
+          fields={[
+            { name: "institution", label: "Institution" },
+            { name: "qualification", label: "Qualification" },
+            { name: "fieldOfStudy", label: "Field of study" },
+            { name: "graduationYear", label: "Graduation year", type: "number" },
+            { name: "gpa", label: "GPA" },
+          ]}
+          columns={[
+            { header: "Institution", cell: (r: SubRecord) => subText(r.institution) },
+            { header: "Qualification", cell: (r: SubRecord) => subText(r.qualification) },
+            { header: "Field", cell: (r: SubRecord) => subText(r.fieldOfStudy) },
+            { header: "Year", cell: (r: SubRecord) => (r.graduationYear ? String(r.graduationYear) : "—") },
+            { header: "GPA", cell: (r: SubRecord) => subText(r.gpa) },
+          ]}
+        />
+      )}
+
+      {tab === "qualifications" && (
+        <SubRecordSection
+          employeeId={e.id}
+          path="qualifications"
+          title="Professional Qualifications"
+          addLabel="Add qualification"
+          schema={qualificationSchema}
+          fields={[
+            {
+              name: "type",
+              label: "Type",
+              type: "select",
+              options: QUALIFICATION_TYPES.map((t) => ({ value: t, label: QUALIFICATION_TYPE_LABELS[t]! })),
+            },
+            { name: "title", label: "Title" },
+            { name: "issuer", label: "Issuer" },
+            { name: "issueDate", label: "Issue date", type: "date" },
+            { name: "expiryDate", label: "Expiry date", type: "date" },
+            { name: "referenceNo", label: "Reference no." },
+          ]}
+          columns={[
+            { header: "Type", cell: (r: SubRecord) => QUALIFICATION_TYPE_LABELS[String(r.type)] ?? subText(r.type) },
+            { header: "Title", cell: (r: SubRecord) => subText(r.title) },
+            { header: "Issuer", cell: (r: SubRecord) => subText(r.issuer) },
+            { header: "Expires", cell: (r: SubRecord) => subDate(r.expiryDate) },
+          ]}
+        />
+      )}
+
+      {tab === "history" && (
+        <SubRecordSection
+          employeeId={e.id}
+          path="employment-history"
+          title="Employment History"
+          addLabel="Add previous employment"
+          schema={employmentHistorySchema}
+          fields={[
+            { name: "employer", label: "Employer" },
+            { name: "position", label: "Position" },
+            { name: "startDate", label: "Start date", type: "date" },
+            { name: "endDate", label: "End date", type: "date" },
+            { name: "responsibilities", label: "Responsibilities", type: "textarea" },
+          ]}
+          columns={[
+            { header: "Employer", cell: (r: SubRecord) => subText(r.employer) },
+            { header: "Position", cell: (r: SubRecord) => subText(r.position) },
+            { header: "From", cell: (r: SubRecord) => subDate(r.startDate) },
+            { header: "To", cell: (r: SubRecord) => subDate(r.endDate) },
+          ]}
+        />
+      )}
+
+      {tab === "contacts" && (
+        <SubRecordSection
+          employeeId={e.id}
+          path="emergency-contacts"
+          title="Emergency Contacts"
+          addLabel="Add contact"
+          schema={emergencyContactSchema}
+          fields={[
+            { name: "name", label: "Name" },
+            { name: "relationship", label: "Relationship" },
+            { name: "phoneNumber", label: "Phone number" },
+            { name: "address", label: "Address", type: "textarea" },
+          ]}
+          columns={[
+            { header: "Name", cell: (r: SubRecord) => subText(r.name) },
+            { header: "Relationship", cell: (r: SubRecord) => subText(r.relationship) },
+            { header: "Phone", cell: (r: SubRecord) => subText(r.phoneNumber) },
+          ]}
+        />
       )}
 
       <Modal open={editOpen} title="Edit employee" onClose={() => setEditOpen(false)}>
