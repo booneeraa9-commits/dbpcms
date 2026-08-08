@@ -6,6 +6,7 @@ import {
   Users,
   GraduationCap,
   Building2,
+  BookOpen,
   ShieldCheck,
   Menu,
   Bell,
@@ -47,6 +48,12 @@ const NAV_ITEMS: NavItem[] = [
     to: "/departments",
     icon: Building2,
     permission: PERMISSIONS.DEPARTMENT_READ,
+  },
+  {
+    label: "Academic",
+    to: "/academic",
+    icon: BookOpen,
+    permission: PERMISSIONS.PROGRAM_READ,
   },
   {
     label: "Administration",
