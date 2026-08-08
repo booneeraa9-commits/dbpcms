@@ -25,32 +25,33 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useTheme } from "@/app/ThemeProvider";
 import { useLanguage, LANGUAGES } from "@/app/LanguageProvider";
+import type { TranslationKey } from "@/app/i18n/en";
 
 interface NavItem {
-  label: string;
+  label: TranslationKey;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
   permission?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", to: "/", icon: LayoutDashboard },
-  { label: "Employees", to: "/employees", icon: Users, permission: PERMISSIONS.EMPLOYEE_READ },
-  { label: "Students", to: "/students", icon: UserSquare2, permission: PERMISSIONS.STUDENT_READ },
-  { label: "Grade Entry", to: "/grade-entry", icon: ClipboardList, permission: PERMISSIONS.GRADE_ENTER },
-  { label: "Grading Setup", to: "/grading-config", icon: GraduationCap, permission: PERMISSIONS.GRADING_CONFIG },
-  { label: "Departments", to: "/departments", icon: Building2, permission: PERMISSIONS.DEPARTMENT_READ },
-  { label: "Academic", to: "/academic", icon: BookOpen, permission: PERMISSIONS.PROGRAM_READ },
-  { label: "Transcripts", to: "/transcripts", icon: ScrollText, permission: PERMISSIONS.TRANSCRIPT_GENERATE },
-  { label: "Reports", to: "/reports", icon: BarChart3, permission: PERMISSIONS.REPORT_VIEW },
-  { label: "Administration", to: "/admin", icon: ShieldCheck, permission: PERMISSIONS.USER_READ },
+  { label: "nav.dashboard", to: "/", icon: LayoutDashboard },
+  { label: "nav.employees", to: "/employees", icon: Users, permission: PERMISSIONS.EMPLOYEE_READ },
+  { label: "nav.students", to: "/students", icon: UserSquare2, permission: PERMISSIONS.STUDENT_READ },
+  { label: "nav.gradeEntry", to: "/grade-entry", icon: ClipboardList, permission: PERMISSIONS.GRADE_ENTER },
+  { label: "nav.gradingSetup", to: "/grading-config", icon: GraduationCap, permission: PERMISSIONS.GRADING_CONFIG },
+  { label: "nav.departments", to: "/departments", icon: Building2, permission: PERMISSIONS.DEPARTMENT_READ },
+  { label: "nav.academic", to: "/academic", icon: BookOpen, permission: PERMISSIONS.PROGRAM_READ },
+  { label: "nav.transcripts", to: "/transcripts", icon: ScrollText, permission: PERMISSIONS.TRANSCRIPT_GENERATE },
+  { label: "nav.reports", to: "/reports", icon: BarChart3, permission: PERMISSIONS.REPORT_VIEW },
+  { label: "nav.administration", to: "/admin", icon: ShieldCheck, permission: PERMISSIONS.USER_READ },
 ];
 
 export function AppLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, hasPermission, logout } = useAuth();
   const { theme, toggle } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
   const visibleItems = NAV_ITEMS.filter(
@@ -104,7 +105,7 @@ export function AppLayout(): JSX.Element {
               }
             >
               <item.icon className="h-5 w-5" />
-              {item.label}
+              {t(item.label)}
             </NavLink>
           ))}
         </nav>
@@ -134,7 +135,7 @@ export function AppLayout(): JSX.Element {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
-              placeholder="Search (coming soon)…"
+              placeholder={t("topbar.searchPlaceholder")}
               disabled
               className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-500 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
             />

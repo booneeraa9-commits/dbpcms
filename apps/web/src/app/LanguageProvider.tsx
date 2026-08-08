@@ -8,34 +8,33 @@ import {
   type JSX,
   type ReactNode,
 } from "react";
+import { en, type TranslationKey } from "./i18n/en.js";
+import { om } from "./i18n/om.js";
 
 /**
- * Minimal i18n scaffolding. It tracks the selected language and remembers it,
- * and exposes a t() translator that looks up a dictionary. For now only English
- * strings exist; an Afaan Oromo dictionary can be dropped in later WITHOUT
- * touching screens — t() falls back to the key's English text meanwhile.
+ * The i18n provider. It tracks the selected language, remembers it, and exposes
+ * a typed t(key) translator. English is the source of truth; Afaan Oromo values
+ * override it, and any missing Oromo key falls back to English automatically.
  *
- * This deliberately ships the toggle + plumbing only (per the plan); actual
- * Oromo translations come in a later localization pass.
+ * To translate more of the app: add a key to en.ts (+ its Oromo value in om.ts)
+ * and use t("that.key") in a component.
  */
 export type Language = "en" | "om"; // om = Afaan Oromo (ISO 639-1)
 
 export const LANGUAGES: { code: Language; label: string }[] = [
   { code: "en", label: "English" },
-  { code: "om", label: "Afaan Oromo" },
+  { code: "om", label: "Afaan Oromoo" },
 ];
 
-// Translation dictionaries. Only English is populated today.
-const DICTIONARIES: Record<Language, Record<string, string>> = {
-  en: {},
-  om: {}, // to be filled during localization
+const DICTIONARIES: Record<Language, Partial<Record<TranslationKey, string>>> = {
+  en,
+  om,
 };
 
 interface LanguageContextValue {
   language: Language;
   setLanguage: (lang: Language) => void;
-  /** Translate a key; falls back to the provided English default. */
-  t: (key: string, fallback: string) => string;
+  t: (key: TranslationKey) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -55,7 +54,7 @@ export function LanguageProvider({ children }: { children: ReactNode }): JSX.Ele
   const setLanguage = useCallback((lang: Language) => setLanguageState(lang), []);
 
   const t = useCallback(
-    (key: string, fallback: string) => DICTIONARIES[language][key] ?? fallback,
+    (key: TranslationKey): string => DICTIONARIES[language][key] ?? en[key] ?? key,
     [language],
   );
 

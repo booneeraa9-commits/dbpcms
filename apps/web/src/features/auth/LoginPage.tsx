@@ -5,6 +5,7 @@ import { GraduationCap, Loader2 } from "lucide-react";
 import { loginSchema } from "@dbpcms/shared";
 import { useAuth } from "./AuthContext";
 import { ApiError } from "@/lib/api-client";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 /**
  * The login screen. Validates input with the SHARED Zod schema (same rules the
@@ -90,26 +91,15 @@ export function LoginPage(): JSX.Element {
             )}
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-slate-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-              placeholder="••••••••••••"
-            />
-            {fieldErrors.password && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
-            )}
-          </div>
+          <PasswordInput
+            id="password"
+            label="Password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={fieldErrors.password}
+            placeholder="••••••••••••"
+          />
 
           {formError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

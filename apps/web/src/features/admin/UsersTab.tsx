@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, KeyRound, Search } from "lucide-react";
 import { userCreateSchema } from "@dbpcms/shared";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Modal } from "@/components/ui/Modal";
 import { DataTable, type Column } from "@/components/DataTable";
 import { Pagination } from "@/components/Pagination";
@@ -191,7 +192,7 @@ export function UsersTab(): JSX.Element {
           {!editing && (
             <>
               <Input id="u-email" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
-              <Input id="u-temp" label="Temporary password" type="text" value={tempPassword} onChange={(e) => setTempPassword(e.target.value)} error={errors.temporaryPassword} placeholder="Min 12 characters" />
+              <PasswordInput id="u-temp" label="Temporary password" value={tempPassword} onChange={(e) => setTempPassword(e.target.value)} error={errors.temporaryPassword} placeholder="Min 12 characters" />
               <p className="text-xs text-slate-500">The user will be required to change this at first login.</p>
             </>
           )}
@@ -227,7 +228,7 @@ export function UsersTab(): JSX.Element {
           Set a new temporary password for <strong>{resetting?.fullName}</strong>. They will be
           required to change it at their next login, and all their active sessions will end.
         </p>
-        <Input id="reset-pw" label="Temporary password" type="text" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} placeholder="Min 12 characters" />
+        <PasswordInput id="reset-pw" label="Temporary password" value={resetPassword} onChange={(e) => setResetPassword(e.target.value)} placeholder="Min 12 characters" />
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setResetting(null)}>Cancel</Button>
           <Button loading={resetMutation.isPending} onClick={() => resetting && resetMutation.mutate(resetting.id)}>Reset password</Button>

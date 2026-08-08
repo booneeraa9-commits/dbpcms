@@ -5,6 +5,7 @@ import { KeyRound, Loader2 } from "lucide-react";
 import { changePasswordSchema } from "@dbpcms/shared";
 import { api, ApiError } from "@/lib/api-client";
 import { useAuth } from "./AuthContext";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 /**
  * Lets a user set a new password. Shown automatically when the account is
@@ -102,25 +103,15 @@ export function ChangePasswordPage(): JSX.Element {
               autoComplete: "new-password",
             },
           ].map((f) => (
-            <div key={f.id}>
-              <label
-                htmlFor={f.id}
-                className="mb-1 block text-sm font-medium text-slate-700"
-              >
-                {f.label}
-              </label>
-              <input
-                id={f.id}
-                type="password"
-                autoComplete={f.autoComplete}
-                value={f.value}
-                onChange={(e) => f.set(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-              />
-              {fieldErrors[f.id] && (
-                <p className="mt-1 text-xs text-red-600">{fieldErrors[f.id]}</p>
-              )}
-            </div>
+            <PasswordInput
+              key={f.id}
+              id={f.id}
+              label={f.label}
+              autoComplete={f.autoComplete}
+              value={f.value}
+              onChange={(e) => f.set(e.target.value)}
+              error={fieldErrors[f.id]}
+            />
           ))}
 
           <p className="text-xs text-slate-500">
