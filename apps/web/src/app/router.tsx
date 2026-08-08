@@ -7,6 +7,7 @@ import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
 import { EmployeeProfilePage } from "@/features/employees/EmployeeProfilePage";
 import { AcademicPage } from "@/features/academic/AcademicPage";
 import { StudentsPage } from "@/features/students/StudentsPage";
+import { GradingConfigPage } from "@/features/grading-config/GradingConfigPage";
 import { AdministrationPage } from "@/features/admin/AdministrationPage";
 import { ReportsPage } from "@/features/reports/ReportsPage";
 import { VerifyPage } from "@/features/verify/VerifyPage";
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
           { path: "departments", element: <DepartmentsPage /> },
           { path: "students", element: <StudentsPage /> },
           { path: "academic", element: <AcademicPage /> },
+          { path: "grading-config", element: <GradingConfigPage /> },
           { path: "reports", element: <ReportsPage /> },
           { path: "admin", element: <AdministrationPage /> },
           { path: "*", element: <PlaceholderPage title="Page not found" /> },

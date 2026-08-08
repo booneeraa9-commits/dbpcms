@@ -74,3 +74,12 @@ Each entry: the decision, who decided, date, and the consequence for the build.
   These live under an "Academic / Grading Configuration" area, editable by authorized users. No code change needed to adjust them.
 
 - **Phase 5 delivery:** all together (Students + Courses + Sections + Enrollment + instructor assignment), PLUS the configuration screens for the settable values above where they belong.
+
+---
+
+## Phase 6 grading-engine defaults (seeded, all editable in UI)
+- Default grading scale (4.0): A+ 90-100=4.0, A 85-89=4.0, A- 80-84=3.75, B+ 75-79=3.5,
+  B 70-74=3.0, B- 65-69=2.75, C+ 60-64=2.5, C 50-59=2.0, D 40-49=1.0, F 0-39=0. Pass mark = 50 (>=2.0).
+- Default components: Quiz 10%, Assignment 15%, Mid Exam 25%, Final Exam 50% (sum 100).
+- Rounding: round half up (84.5 -> 85) before band match. Configurable.
+- All of the above editable via UI config screens (grading scale editor, components editor, GPA rule).

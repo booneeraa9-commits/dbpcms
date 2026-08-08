@@ -123,6 +123,49 @@ async function main(): Promise<void> {
     });
   }
 
+  // 5) Default grading configuration (only if none exists) --------------------
+  const existingScale = await prisma.gradingScale.findFirst({
+    where: { departmentId: null, deletedAt: null },
+  });
+  if (!existingScale) {
+    console.log("  • Seeding default grading scale (4.0)…");
+    await prisma.gradingScale.create({
+      data: {
+        name: "Standard 4.0",
+        passMark: 50,
+        rounding: "half_up",
+        isActive: true,
+        bands: {
+          create: [
+            { minPercent: 90, maxPercent: 100, letter: "A+", gradePoint: 4.0, isPass: true },
+            { minPercent: 85, maxPercent: 89, letter: "A", gradePoint: 4.0, isPass: true },
+            { minPercent: 80, maxPercent: 84, letter: "A-", gradePoint: 3.75, isPass: true },
+            { minPercent: 75, maxPercent: 79, letter: "B+", gradePoint: 3.5, isPass: true },
+            { minPercent: 70, maxPercent: 74, letter: "B", gradePoint: 3.0, isPass: true },
+            { minPercent: 65, maxPercent: 69, letter: "B-", gradePoint: 2.75, isPass: true },
+            { minPercent: 60, maxPercent: 64, letter: "C+", gradePoint: 2.5, isPass: true },
+            { minPercent: 50, maxPercent: 59, letter: "C", gradePoint: 2.0, isPass: true },
+            { minPercent: 40, maxPercent: 49, letter: "D", gradePoint: 1.0, isPass: false },
+            { minPercent: 0, maxPercent: 39, letter: "F", gradePoint: 0, isPass: false },
+          ],
+        },
+      },
+    });
+  }
+
+  const existingComponents = await prisma.gradeComponent.count({ where: { deletedAt: null } });
+  if (existingComponents === 0) {
+    console.log("  • Seeding default grade components…");
+    await prisma.gradeComponent.createMany({
+      data: [
+        { name: "Quiz", weightPercent: 10, sequence: 1 },
+        { name: "Assignment", weightPercent: 15, sequence: 2 },
+        { name: "Mid Exam", weightPercent: 25, sequence: 3 },
+        { name: "Final Exam", weightPercent: 50, sequence: 4 },
+      ],
+    });
+  }
+
   console.log("Seeding complete. ✔");
 }
 

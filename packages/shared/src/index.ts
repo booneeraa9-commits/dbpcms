@@ -19,3 +19,5 @@ export * from "./validation/users.js";
 export * from "./validation/employees.js";
 export * from "./validation/employee-subrecords.js";
 export * from "./validation/students.js";
+export * from "./validation/grading-config.js";
+export * from "./grading/calculator.js";

@@ -35,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
   { label: "Employees", to: "/employees", icon: Users, permission: PERMISSIONS.EMPLOYEE_READ },
   { label: "Students", to: "/students", icon: UserSquare2, permission: PERMISSIONS.STUDENT_READ },
-  { label: "Grading", to: "/grading", icon: GraduationCap, permission: PERMISSIONS.GRADE_ENTER },
+  { label: "Grading Setup", to: "/grading-config", icon: GraduationCap, permission: PERMISSIONS.GRADE_ENTER },
   { label: "Departments", to: "/departments", icon: Building2, permission: PERMISSIONS.DEPARTMENT_READ },
   { label: "Academic", to: "/academic", icon: BookOpen, permission: PERMISSIONS.PROGRAM_READ },
   { label: "Reports", to: "/reports", icon: BarChart3, permission: PERMISSIONS.REPORT_VIEW },

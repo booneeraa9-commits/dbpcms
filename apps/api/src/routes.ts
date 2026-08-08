@@ -14,6 +14,7 @@ import { verificationRouter } from "./modules/verification/verification.routes.j
 import { studentsRouter } from "./modules/students/students.routes.js";
 import { coursesRouter } from "./modules/courses/courses.routes.js";
 import { sectionsRouter } from "./modules/sections/sections.routes.js";
+import { gradingConfigRouter } from "./modules/grading-config/grading-config.routes.js";
 
 /**
  * The API v1 router. Every module registers its routes here under /api/v1.
@@ -35,6 +36,7 @@ apiV1Router.use("/reports", reportsRouter);
 apiV1Router.use("/students", studentsRouter);
 apiV1Router.use("/courses", coursesRouter);
 apiV1Router.use("/sections", sectionsRouter);
+apiV1Router.use("/grading-config", gradingConfigRouter);
 // Public (no auth) verification lookup.
 apiV1Router.use("/verify", verificationRouter);
 

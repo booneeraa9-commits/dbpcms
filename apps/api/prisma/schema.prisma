@@ -574,6 +574,71 @@ model Enrollment {
   @@map("enrollments")
 }
 
+// ============================================================================
+// GRADING CONFIGURATION (Phase 6) — all editable in the UI, no code changes.
+// Scales, components, and GPA rules are VERSIONED and SCOPED (null department =
+// college-wide default; a department id = that department's override later).
+// ============================================================================
+
+/// A named grading scale (e.g. "Standard 4.0"). Its letter bands live in
+/// GradingScaleBand. Versioning lets old published grades keep their scale.
+model GradingScale {
+  id           String  @id @default(uuid()) @db.Uuid
+  name         String
+  departmentId String? @map("department_id") @db.Uuid // null = college-wide
+  version      Int     @default(1)
+  isActive     Boolean @default(true) @map("is_active")
+  passMark     Float   @default(50) @map("pass_mark") // % at/above which a student passes
+  rounding     String  @default("half_up") // half_up | truncate | nearest
+
+  bands GradingScaleBand[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([departmentId])
+  @@map("grading_scales")
+}
+
+/// One letter band within a grading scale (e.g. 90-100 = A+ = 4.0, pass).
+model GradingScaleBand {
+  id         String  @id @default(uuid()) @db.Uuid
+  scaleId    String  @map("scale_id") @db.Uuid
+  minPercent Float   @map("min_percent")
+  maxPercent Float   @map("max_percent")
+  letter     String
+  gradePoint Float   @map("grade_point")
+  isPass     Boolean @default(true) @map("is_pass")
+
+  scale GradingScale @relation(fields: [scaleId], references: [id], onDelete: Cascade)
+
+  @@index([scaleId])
+  @@map("grading_scale_bands")
+}
+
+/// A configurable grade component (Quiz, Mid, Final…) with a weight percentage.
+/// Grouped by componentSetName + scope; weights within a set should sum to 100.
+model GradeComponent {
+  id             String  @id @default(uuid()) @db.Uuid
+  name           String
+  weightPercent  Float   @map("weight_percent")
+  sequence       Int     @default(0)
+  departmentId   String? @map("department_id") @db.Uuid // null = college-wide
+  isActive       Boolean @default(true) @map("is_active")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([departmentId])
+  @@map("grade_components")
+}
+
 /// Append-only diary of critical actions: who did what, when, from where.
 model AuditLog {
   id         String   @id @default(uuid()) @db.Uuid
