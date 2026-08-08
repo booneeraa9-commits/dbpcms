@@ -4,17 +4,21 @@ import { cn } from "@/lib/utils";
 import { ProgramsTab } from "./ProgramsTab";
 import { AcademicYearsTab } from "./AcademicYearsTab";
 import { SemestersTab } from "./SemestersTab";
+import { CoursesTab } from "./CoursesTab";
+import { SectionsTab } from "./SectionsTab";
 
 /**
- * The Academic Structure page groups three related managers under one screen
- * with tabs: Programs, Academic Years, and Semesters.
+ * The Academic Structure page groups related managers under one screen with
+ * tabs: Programs, Academic Years, Semesters, Courses, and Sections.
  */
-type Tab = "programs" | "years" | "semesters";
+type Tab = "programs" | "years" | "semesters" | "courses" | "sections";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "programs", label: "Programs" },
   { id: "years", label: "Academic Years" },
   { id: "semesters", label: "Semesters" },
+  { id: "courses", label: "Courses" },
+  { id: "sections", label: "Sections" },
 ];
 
 export function AcademicPage(): JSX.Element {
@@ -52,6 +56,8 @@ export function AcademicPage(): JSX.Element {
       {tab === "programs" && <ProgramsTab />}
       {tab === "years" && <AcademicYearsTab />}
       {tab === "semesters" && <SemestersTab />}
+      {tab === "courses" && <CoursesTab />}
+      {tab === "sections" && <SectionsTab />}
     </div>
   );
 }

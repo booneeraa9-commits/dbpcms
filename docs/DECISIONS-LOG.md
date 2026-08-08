@@ -58,3 +58,19 @@ Each entry: the decision, who decided, date, and the consequence for the build.
 - Grading: **immutable snapshots** on publish; versioned scales/rules.
 - Passwords: **argon2id**.
 - `users` and `employees` are separate tables with a nullable link.
+
+---
+
+## Student Grading Module decisions (recorded before Phase 5)
+
+- **Student ID format:** `DBPC-STU-YYYY-00001` (prefix + year + sequence, never reused). Consistent with employee IDs.
+- **Grading scope (V1 start):** ONE college-wide configurable grading scale + GPA rule. Per-department rules are DESIGNED-FOR and can be enabled later without a rewrite (scale/rule records already carry a department scope + version).
+- **GPA default:** 4.0 scale, pass mark 50% (grade point >= 2.0 = pass). ALL editable in the UI.
+- **CRITICAL REQUIREMENT (user emphasized):** every value/rule I asked about MUST be settable in the UI, not hardcoded. This includes:
+  - Student ID prefix/format pieces (in System Settings)
+  - Grading scale bands (min%, max%, letter, grade point, is_pass) — editable grading-scale editor
+  - GPA rule (scale type, rounding, pass mark) — editable
+  - Grade components + weights — editable per set
+  These live under an "Academic / Grading Configuration" area, editable by authorized users. No code change needed to adjust them.
+
+- **Phase 5 delivery:** all together (Students + Courses + Sections + Enrollment + instructor assignment), PLUS the configuration screens for the settable values above where they belong.
