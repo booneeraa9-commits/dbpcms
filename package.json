@@ -25,7 +25,8 @@
       "argon2",
       "prisma",
       "@prisma/client",
-      "@prisma/engines"
+      "@prisma/engines",
+      "sharp"
     ]
   }
 }

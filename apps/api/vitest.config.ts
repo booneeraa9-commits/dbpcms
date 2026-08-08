@@ -15,6 +15,7 @@ export default defineConfig({
       JWT_REFRESH_SECRET: "test-refresh-secret-that-is-long-enough-32c",
       SEED_ADMIN_EMAIL: "booneeraa9@gmail.com",
       SEED_ADMIN_PASSWORD: "Abbaakoo1@Abbaakoo1@",
+      STORAGE_ROOT: "./.test-storage",
     },
     // Run test files one at a time (they share one database).
     fileParallelism: false,

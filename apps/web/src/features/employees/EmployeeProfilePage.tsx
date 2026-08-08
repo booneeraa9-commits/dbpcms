@@ -23,6 +23,7 @@ import { employeesApi, type EmployeeDetail } from "./api";
 import { EmployeeForm, type EmployeeFormValues } from "./EmployeeForm";
 import { SubRecordSection } from "./SubRecordSection";
 import type { SubRecord } from "./subrecords-api";
+import { DocumentsTab } from "./DocumentsTab";
 
 type Tab =
   | "personal"
@@ -30,7 +31,8 @@ type Tab =
   | "education"
   | "qualifications"
   | "history"
-  | "contacts";
+  | "contacts"
+  | "documents";
 
 function subDate(v: unknown): string {
   return typeof v === "string" && v.length > 0
@@ -163,6 +165,7 @@ export function EmployeeProfilePage(): JSX.Element {
             ["qualifications", "Qualifications"],
             ["history", "Employment History"],
             ["contacts", "Emergency Contacts"],
+            ["documents", "Documents"],
           ] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
@@ -312,6 +315,8 @@ export function EmployeeProfilePage(): JSX.Element {
           ]}
         />
       )}
+
+      {tab === "documents" && <DocumentsTab employeeId={e.id} />}
 
       <Modal open={editOpen} title="Edit employee" onClose={() => setEditOpen(false)}>
         <EmployeeForm

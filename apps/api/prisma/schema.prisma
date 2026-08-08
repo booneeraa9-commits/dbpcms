@@ -370,6 +370,28 @@ model EmployeeNumberSequence {
   @@map("employee_number_sequences")
 }
 
+/// Metadata for an uploaded file. The actual bytes live in the storage provider
+/// (local disk now, cloud later) referenced by storageKey. ownerType/ownerId
+/// make this table reusable for students, etc., in future modules.
+model Document {
+  id               String  @id @default(uuid()) @db.Uuid
+  ownerType        String  @map("owner_type") // "employee" (future: "student", ...)
+  ownerId          String  @map("owner_id") @db.Uuid
+  documentType     String  @map("document_type") // degree | cv | national_id | ...
+  originalFilename String  @map("original_filename")
+  storageKey       String  @map("storage_key") // path/key the StorageProvider understands
+  mimeType         String  @map("mime_type")
+  sizeBytes        Int     @map("size_bytes")
+  checksum         String?
+  uploadedBy       String? @map("uploaded_by") @db.Uuid
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([ownerType, ownerId])
+  @@map("documents")
+}
+
 /// Append-only diary of critical actions: who did what, when, from where.
 model AuditLog {
   id         String   @id @default(uuid()) @db.Uuid

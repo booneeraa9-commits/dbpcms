@@ -12,6 +12,7 @@ import {
   historyRouter,
   emergencyRouter,
 } from "./subrecords.routes.js";
+import { documentsRouter } from "../documents/documents.routes.js";
 
 function actor(req: Request) {
   return {
@@ -29,6 +30,7 @@ employeesRouter.use("/:employeeId/education", educationRouter);
 employeesRouter.use("/:employeeId/qualifications", qualificationRouter);
 employeesRouter.use("/:employeeId/employment-history", historyRouter);
 employeesRouter.use("/:employeeId/emergency-contacts", emergencyRouter);
+employeesRouter.use("/:employeeId/documents", documentsRouter);
 
 employeesRouter.get(
   "/",
