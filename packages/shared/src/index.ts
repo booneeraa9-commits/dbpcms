@@ -12,3 +12,4 @@ export * from "./constants/role-permissions.js";
 export * from "./types/api.js";
 export * from "./validation/auth.js";
 export * from "./validation/academic.js";
+export * from "./validation/users.js";
