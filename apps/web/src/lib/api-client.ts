@@ -105,8 +105,61 @@ async function tryRefresh(): Promise<boolean> {
   }
 }
 
+/** Pagination info returned with list endpoints. */
+export interface ListMeta {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+/**
+ * Like a GET, but returns BOTH the array and the pagination meta. Used by list
+ * screens that need totals for pagination controls.
+ */
+async function getList<T>(
+  path: string,
+  retry = true,
+): Promise<{ items: T[]; meta: ListMeta }> {
+  const headers: Record<string, string> = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+  const response = await fetch(`/api/v1${path}`, {
+    headers,
+    credentials: "include",
+  });
+
+  if (response.status === 401 && retry) {
+    const refreshed = await tryRefresh();
+    if (refreshed) return getList<T>(path, false);
+    onAuthFailure?.();
+  }
+
+  const json = (await response.json().catch(() => null)) as {
+    success: boolean;
+    data?: T[];
+    meta?: ListMeta;
+    error?: { code: string; message: string };
+  } | null;
+
+  if (!response.ok || !json || json.success === false) {
+    throw new ApiError(
+      json?.error?.message ?? "Request failed.",
+      json?.error?.code ?? "UNKNOWN",
+      response.status,
+    );
+  }
+  return {
+    items: json.data ?? [],
+    meta:
+      json.meta ??
+      { page: 1, pageSize: (json.data ?? []).length, totalItems: (json.data ?? []).length, totalPages: 1 },
+  };
+}
+
 export const api = {
   get: <T>(path: string) => rawRequest<T>(path),
+  getList,
   post: <T>(path: string, body?: unknown) =>
     rawRequest<T>(path, { method: "POST", body }),
   patch: <T>(path: string, body?: unknown) =>

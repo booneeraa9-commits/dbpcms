@@ -130,6 +130,103 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
+// ============================================================================
+// ACADEMIC STRUCTURE (Phase 3)
+// Departments → Programs → Courses, plus Academic Years → Semesters.
+// These are the foundation the Employee and Grading modules build upon.
+// ============================================================================
+
+/// An academic department (e.g. Engineering, Business).
+model Department {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String
+  code        String  @unique
+  description String?
+  isActive    Boolean @default(true) @map("is_active")
+
+  programs Program[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(0)
+
+  @@index([code])
+  @@index([isActive])
+  @@map("departments")
+}
+
+/// A program of study belonging to a department (e.g. BSc in Software Eng.).
+model Program {
+  id            String  @id @default(uuid()) @db.Uuid
+  departmentId  String  @map("department_id") @db.Uuid
+  name          String
+  code          String  @unique
+  degreeLevel   String  @map("degree_level") // e.g. Diploma, Degree
+  durationYears Int     @map("duration_years")
+  isActive      Boolean @default(true) @map("is_active")
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(0)
+
+  @@index([departmentId])
+  @@index([code])
+  @@map("programs")
+}
+
+/// An academic year, e.g. "2026/2027". Exactly one can be the current year.
+model AcademicYear {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  isCurrent Boolean  @default(false) @map("is_current")
+
+  semesters Semester[]
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(0)
+
+  @@index([isCurrent])
+  @@map("academic_years")
+}
+
+/// A semester within an academic year.
+model Semester {
+  id             String   @id @default(uuid()) @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  name           String // e.g. "Semester I"
+  sequence       Int // 1, 2, 3…
+  startDate      DateTime @map("start_date") @db.Date
+  endDate        DateTime @map("end_date") @db.Date
+  status         String   @default("planned") // planned | active | closed
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(0)
+
+  @@unique([academicYearId, sequence])
+  @@index([academicYearId])
+  @@map("semesters")
+}
+
 /// Append-only diary of critical actions: who did what, when, from where.
 model AuditLog {
   id         String   @id @default(uuid()) @db.Uuid

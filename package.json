@@ -8,7 +8,8 @@
   },
   "packageManager": "pnpm@10.34.5",
   "scripts": {
-    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev": "pnpm --filter @dbpcms/shared build && pnpm --parallel --filter \"./apps/*\" dev",
+    "setup": "pnpm install && pnpm --filter @dbpcms/shared build && pnpm --filter @dbpcms/api prisma:generate",
     "dev:api": "pnpm --filter @dbpcms/api dev",
     "dev:web": "pnpm --filter @dbpcms/web dev",
     "build": "pnpm --filter @dbpcms/shared build && pnpm --filter @dbpcms/api build && pnpm --filter @dbpcms/web build",
