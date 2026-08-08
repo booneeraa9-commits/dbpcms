@@ -144,7 +144,8 @@ model Department {
   description String?
   isActive    Boolean @default(true) @map("is_active")
 
-  programs Program[]
+  programs  Program[]
+  employees Employee[] @relation("DepartmentEmployees")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -225,6 +226,67 @@ model Semester {
   @@unique([academicYearId, sequence])
   @@index([academicYearId])
   @@map("semesters")
+}
+
+// ============================================================================
+// EMPLOYEE MANAGEMENT (Phase 4)
+// ============================================================================
+
+/// The master HR record for an employee. Not linked to a login by default.
+model Employee {
+  id             String  @id @default(uuid()) @db.Uuid
+  employeeNumber String  @unique @map("employee_number")
+
+  // --- Personal ---
+  firstName     String   @map("first_name")
+  middleName    String?  @map("middle_name")
+  lastName      String   @map("last_name")
+  gender        String
+  dateOfBirth   DateTime @map("date_of_birth") @db.Date
+  nationality   String?
+  maritalStatus String?  @map("marital_status")
+  nationalId    String   @map("national_id")
+  taxId         String?  @map("tax_id")
+  phoneNumber   String   @map("phone_number")
+  email         String
+  address       String?
+
+  // --- Employment ---
+  departmentId     String    @map("department_id") @db.Uuid
+  position         String
+  employmentType   String    @map("employment_type") // full_time | part_time | contract
+  contractType     String?   @map("contract_type")
+  employmentStatus String    @map("employment_status") // active | on_leave | suspended | terminated | retired
+  dateOfEmployment DateTime  @map("date_of_employment") @db.Date
+  contractEndDate  DateTime? @map("contract_end_date") @db.Date
+  salaryGrade      String?   @map("salary_grade")
+  officeLocation   String?   @map("office_location")
+  supervisorId     String?   @map("supervisor_id") @db.Uuid
+
+  department Department @relation("DepartmentEmployees", fields: [departmentId], references: [id], onDelete: Restrict)
+  supervisor Employee?  @relation("EmployeeSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  reports    Employee[] @relation("EmployeeSupervisor")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+  deletedAt DateTime? @map("deleted_at")
+  version   Int       @default(0)
+
+  @@index([employeeNumber])
+  @@index([departmentId])
+  @@index([employmentStatus])
+  @@index([lastName, firstName])
+  @@map("employees")
+}
+
+/// Per-year counter to generate sequential, never-reused employee numbers.
+model EmployeeNumberSequence {
+  year      Int @id
+  lastValue Int @default(0) @map("last_value")
+
+  @@map("employee_number_sequences")
 }
 
 /// Append-only diary of critical actions: who did what, when, from where.

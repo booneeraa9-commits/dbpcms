@@ -10,7 +10,14 @@ import { z } from "zod";
  */
 export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  // Clamp pageSize into [1, 100] instead of rejecting. A caller asking for a
+  // larger page simply gets the maximum, which is friendlier for dropdowns that
+  // request "all" while still capping the load on the database.
+  pageSize: z.coerce
+    .number()
+    .int()
+    .default(20)
+    .transform((n) => Math.min(Math.max(n, 1), 100)),
   sort: z.string().optional(),
   search: z.string().trim().max(200).optional(),
 });

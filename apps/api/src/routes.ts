@@ -7,6 +7,7 @@ import { academicYearsRouter } from "./modules/academic-years/academic-years.rou
 import { semestersRouter } from "./modules/semesters/semesters.routes.js";
 import { usersRouter } from "./modules/users/users.routes.js";
 import { auditLogsRouter } from "./modules/audit-logs/audit-logs.routes.js";
+import { employeesRouter } from "./modules/employees/employees.routes.js";
 
 /**
  * The API v1 router. Every module registers its routes here under /api/v1.
@@ -22,6 +23,7 @@ apiV1Router.use("/academic-years", academicYearsRouter);
 apiV1Router.use("/semesters", semestersRouter);
 apiV1Router.use("/users", usersRouter);
 apiV1Router.use("/audit-logs", auditLogsRouter);
+apiV1Router.use("/employees", employeesRouter);
 
 // Future modules will be mounted here, e.g.:
 // apiV1Router.use("/employees", employeeRouter);

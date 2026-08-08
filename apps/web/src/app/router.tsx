@@ -3,6 +3,8 @@ import { AppLayout } from "./AppLayout";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { PlaceholderPage } from "@/features/misc/PlaceholderPage";
 import { DepartmentsPage } from "@/features/departments/DepartmentsPage";
+import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
+import { EmployeeProfilePage } from "@/features/employees/EmployeeProfilePage";
 import { AcademicPage } from "@/features/academic/AcademicPage";
 import { AdministrationPage } from "@/features/admin/AdministrationPage";
 import { LoginPage } from "@/features/auth/LoginPage";
@@ -26,7 +28,8 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { index: true, element: <DashboardPage /> },
-          { path: "employees", element: <PlaceholderPage title="Employees" /> },
+          { path: "employees", element: <EmployeesListPage /> },
+          { path: "employees/:id", element: <EmployeeProfilePage /> },
           { path: "grading", element: <PlaceholderPage title="Grading" /> },
           { path: "departments", element: <DepartmentsPage /> },
           { path: "academic", element: <AcademicPage /> },
