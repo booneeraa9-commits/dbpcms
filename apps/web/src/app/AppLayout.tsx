@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   Menu,
   Bell,
-  Search,
   LogOut,
   Sun,
   Moon,
@@ -26,6 +25,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useTheme } from "@/app/ThemeProvider";
 import { useLanguage, LANGUAGES } from "@/app/LanguageProvider";
 import type { TranslationKey } from "@/app/i18n/en";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 interface NavItem {
   label: TranslationKey;
@@ -79,13 +79,15 @@ export function AppLayout(): JSX.Element {
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5 dark:border-slate-800">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 font-bold text-white">
-            DB
-          </div>
+        <div className="flex h-16 items-center gap-2.5 border-b border-slate-200 px-4 dark:border-slate-800">
+          <img
+            src="/brand/logo.png"
+            alt="Donna Barbar Polytechnic College"
+            className="h-10 w-10 shrink-0 rounded-md bg-white object-contain p-0.5"
+          />
           <div className="leading-tight">
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">DBPCMS</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Polytechnic College</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Donna Barbar Polytechnic</p>
           </div>
         </div>
         <nav className="space-y-1 p-3">
@@ -131,15 +133,7 @@ export function AppLayout(): JSX.Element {
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="relative hidden max-w-md flex-1 sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="search"
-              placeholder={t("topbar.searchPlaceholder")}
-              disabled
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-500 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
-            />
-          </div>
+          <GlobalSearch />
 
           <div className="ml-auto flex items-center gap-2">
             {/* Language toggle */}

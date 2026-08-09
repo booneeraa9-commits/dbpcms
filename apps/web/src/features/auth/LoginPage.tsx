@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { loginSchema } from "@dbpcms/shared";
 import { useAuth } from "./AuthContext";
 import { ApiError } from "@/lib/api-client";
@@ -55,18 +55,24 @@ export function LoginPage(): JSX.Element {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+    <div
+      className="relative flex min-h-screen items-center justify-center bg-slate-900 bg-cover bg-center p-4"
+      style={{ backgroundImage: "url('/brand/login-bg.jpg')" }}
+    >
+      {/* Subtle dark overlay so the card pops on any background */}
+      <div className="absolute inset-0 bg-slate-950/40" aria-hidden="true" />
+
+      <div className="relative w-full max-w-md rounded-2xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-sm">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-white">
-            <GraduationCap className="h-6 w-6" />
-          </div>
-          <h1 className="mt-3 text-xl font-semibold text-slate-900">
-            Sign in to DBPCMS
-          </h1>
-          <p className="text-sm text-slate-500">
+          <img
+            src="/brand/logo.png"
+            alt="Donna Barbar Polytechnic College"
+            className="h-24 w-auto object-contain"
+          />
+          <h1 className="mt-4 text-xl font-semibold text-slate-900">
             Donna Barbar Polytechnic College
-          </p>
+          </h1>
+          <p className="text-sm text-slate-500">Management System</p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
