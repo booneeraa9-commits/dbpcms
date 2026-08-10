@@ -63,8 +63,13 @@ services:
       - key: CORS_ORIGINS
         sync: false
       # Where uploaded files live on the server's disk.
+      # NOTE: the free tier does NOT support persistent disks, so we point this
+      # at a normal folder. Uploaded documents/photos are fine while the service
+      # runs, but do NOT survive a redeploy on free. When you upgrade the service
+      # to a paid plan, re-add the "disk:" block below and set STORAGE_ROOT to
+      # /var/data/storage so uploads persist across deploys.
       - key: STORAGE_ROOT
-        value: /var/data/storage
+        value: ./storage
       # First admin account. CHANGE THE PASSWORD in the Render dashboard before go-live.
       - key: SEED_ADMIN_EMAIL
         value: booneeraa9@gmail.com
@@ -72,8 +77,13 @@ services:
         sync: false        # you type this secret in the Render dashboard; never in git
       - key: LOG_LEVEL
         value: info
-    # A small persistent disk so uploaded documents/photos survive redeploys.
-    disk:
-      name: dbpcms-storage
-      mountPath: /var/data
-      sizeGB: 1
+    # -------------------------------------------------------------------------
+    # PERSISTENT DISK (paid plans only) — uncomment when you upgrade to Starter,
+    # and change STORAGE_ROOT above to /var/data/storage so uploads survive
+    # redeploys. Free-tier services cannot have a disk.
+    # -------------------------------------------------------------------------
+    # disk:
+    #   name: dbpcms-storage
+    #   mountPath: /var/data
+    #   sizeGB: 1
+
