@@ -5,7 +5,7 @@ import { authenticate } from "../../middleware/authenticate.js";
 import { requirePermission } from "../../middleware/require-permission.js";
 import { asyncHandler } from "../../core/http/async-handler.js";
 import { sendSuccess } from "../../core/http/responses.js";
-import { env } from "../../config/env.js";
+import { publicAppUrl } from "../../config/env.js";
 import { transcriptsService } from "./transcripts.service.js";
 import { buildTranscriptHtml } from "./transcript-print.js";
 
@@ -28,8 +28,7 @@ transcriptsRouter.get(
   "/students/:studentId/print",
   requirePermission(PERMISSIONS.TRANSCRIPT_GENERATE),
   asyncHandler(async (req: Request, res: Response) => {
-    const publicBaseUrl = env.CORS_ORIGINS[0] ?? "http://localhost:5173";
-    const html = await buildTranscriptHtml(req.params.studentId!, publicBaseUrl, req.auth!.userId);
+    const html = await buildTranscriptHtml(req.params.studentId!, publicAppUrl, req.auth!.userId);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   }),

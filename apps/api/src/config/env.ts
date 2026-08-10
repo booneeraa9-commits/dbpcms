@@ -34,6 +34,19 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
+  // The PUBLIC address of this deployment, used to build QR verification links
+  // and any other absolute URL that must work from OUTSIDE the server (e.g. a
+  // phone scanning a printed transcript). This must be the address a visitor
+  // types in their browser — NOT localhost.
+  //
+  // Precedence when building the effective public URL (see `publicAppUrl` below):
+  //   1. PUBLIC_APP_URL if you set it explicitly (best for a custom domain), else
+  //   2. RENDER_EXTERNAL_URL, which Render injects automatically (e.g.
+  //      https://dbpcms.onrender.com) — so on Render this "just works", else
+  //   3. the first CORS origin, else
+  //   4. http://localhost:5173 for local development.
+  PUBLIC_APP_URL: z.string().optional(),
+  RENDER_EXTERNAL_URL: z.string().optional(),
   JWT_ACCESS_SECRET: z
     .string()
     .min(32, "JWT_ACCESS_SECRET must be at least 32 characters."),
@@ -69,3 +82,20 @@ if (!parsed.success) {
 /** The validated, strongly-typed configuration used everywhere in the backend. */
 export const env = parsed.data;
 export type Env = typeof env;
+
+/**
+ * The effective PUBLIC base URL of this deployment, with a trailing slash removed.
+ * Use THIS (not CORS_ORIGINS) whenever you build an absolute URL that must work
+ * from outside the server — most importantly the QR verification links printed on
+ * employee profiles and transcripts.
+ *
+ * See PUBLIC_APP_URL in the schema above for the precedence order. On Render,
+ * RENDER_EXTERNAL_URL is set automatically, so QR codes point at the live site
+ * with zero configuration.
+ */
+export const publicAppUrl: string = (
+  env.PUBLIC_APP_URL ||
+  env.RENDER_EXTERNAL_URL ||
+  env.CORS_ORIGINS[0] ||
+  "http://localhost:5173"
+).replace(/\/+$/, "");

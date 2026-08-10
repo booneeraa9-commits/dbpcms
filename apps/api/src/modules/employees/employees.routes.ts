@@ -16,7 +16,7 @@ import multer from "multer";
 import { documentsRouter } from "../documents/documents.routes.js";
 import { buildEmployeeProfileHtml } from "./profile-print.js";
 import { photoService } from "./photo.service.js";
-import { env } from "../../config/env.js";
+import { publicAppUrl } from "../../config/env.js";
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -103,11 +103,12 @@ employeesRouter.get(
   "/:id/print",
   requirePermission(PERMISSIONS.EMPLOYEE_PRINT),
   asyncHandler(async (req: Request, res: Response) => {
-    // Public base URL for the verify link/QR = the first allowed CORS origin.
-    const publicBaseUrl = env.CORS_ORIGINS[0] ?? "http://localhost:5173";
+    // Public base URL for the verify link/QR = the deployment's real public URL
+    // (auto-detected on Render, configurable via PUBLIC_APP_URL). Never localhost
+    // in production, so scanned QR codes resolve on any device.
     const html = await buildEmployeeProfileHtml(
       req.params.id!,
-      publicBaseUrl,
+      publicAppUrl,
       req.auth!.userId,
     );
     res.setHeader("Content-Type", "text/html; charset=utf-8");
