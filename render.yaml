@@ -1,0 +1,79 @@
+# =============================================================================
+# Render Blueprint for DBPCMS  (https://render.com)
+#
+# This one file tells Render how to host the whole system:
+#   1. a managed PostgreSQL database, and
+#   2. a single web service that serves BOTH the API and the built React app.
+#
+# HOW TO USE (full click-by-click steps are in docs/DEPLOY-RENDER.md):
+#   - Push this file to your GitHub repo.
+#   - In Render: New +  ->  Blueprint  ->  pick the dbpcms repo.
+#   - Render reads this file, creates the database + service, and deploys.
+#
+# The frontend talks to the API using relative URLs (/api/v1/...), and the API
+# serves the frontend, so everything lives on ONE https://...onrender.com URL
+# with no CORS headaches.
+# =============================================================================
+
+databases:
+  - name: dbpcms-db
+    databaseName: dbpcms
+    user: dbpcms
+    plan: free            # free Postgres (expires after 90 days) — upgrade to "basic-256mb" or higher for real use
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: dbpcms
+    runtime: node
+    plan: free            # free web service (sleeps after ~15 min idle) — upgrade to "starter" for always-on
+    region: frankfurt     # closest Render region to Ethiopia; change if you prefer
+    # Enable Corepack so the exact pnpm version in package.json is used, then
+    # install deps and build shared + web + api, copying the web build into the API.
+    buildCommand: "corepack enable && pnpm install --frozen-lockfile && pnpm build:prod"
+    # On start: apply DB migrations, seed baseline data (idempotent), then run the API.
+    startCommand: "pnpm start:prod"
+    healthCheckPath: /health
+    autoDeploy: true      # redeploy automatically on every push to the connected branch
+    envVars:
+      - key: NODE_VERSION
+        value: "24.18.1"
+      - key: NODE_ENV
+        value: production
+      # Render injects the port to listen on; our API reads process.env.PORT.
+      - key: PORT
+        value: "10000"
+      # Pull the database connection string straight from the managed database above.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dbpcms-db
+          property: connectionString
+      # Strong secrets are generated ONCE by Render and kept secret.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: "15m"
+      - key: JWT_REFRESH_TTL
+        value: "7d"
+      # Same-origin in production (API serves the frontend), so CORS just needs the
+      # service's own URL. Render exposes it as RENDER_EXTERNAL_URL at runtime; we
+      # set CORS_ORIGINS from the dashboard after first deploy (see deploy guide).
+      - key: CORS_ORIGINS
+        sync: false
+      # Where uploaded files live on the server's disk.
+      - key: STORAGE_ROOT
+        value: /var/data/storage
+      # First admin account. CHANGE THE PASSWORD in the Render dashboard before go-live.
+      - key: SEED_ADMIN_EMAIL
+        value: booneeraa9@gmail.com
+      - key: SEED_ADMIN_PASSWORD
+        sync: false        # you type this secret in the Render dashboard; never in git
+      - key: LOG_LEVEL
+        value: info
+    # A small persistent disk so uploaded documents/photos survive redeploys.
+    disk:
+      name: dbpcms-storage
+      mountPath: /var/data
+      sizeGB: 1

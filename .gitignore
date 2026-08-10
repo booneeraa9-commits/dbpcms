@@ -8,6 +8,9 @@ build/
 out/
 *.tsbuildinfo
 
+# Frontend copied into the API for single-service production hosting (built fresh on deploy)
+apps/api/public/
+
 # Environment & secrets — NEVER commit these
 .env
 .env.*
