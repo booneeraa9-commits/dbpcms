@@ -19,6 +19,8 @@ databases:
   - name: dbpcms-db
     databaseName: dbpcms
     user: dbpcms
+    region: oregon        # MUST match the web service region below, or the internal
+                          # connection URL is unreachable across regions.
     plan: free            # free Postgres (expires after 90 days) — upgrade to "basic-256mb" or higher for real use
     postgresMajorVersion: "16"
 
@@ -27,7 +29,9 @@ services:
     name: dbpcms
     runtime: node
     plan: free            # free web service (sleeps after ~15 min idle) — upgrade to "starter" for always-on
-    region: frankfurt     # closest Render region to Ethiopia; change if you prefer
+    region: oregon        # MUST match the database region above so the internal
+                          # DATABASE_URL works. (Frankfurt is closer to Ethiopia, but
+                          # then the database MUST also be region: frankfurt.)
     # Enable Corepack so the exact pnpm version in package.json is used, then
     # install deps and build shared + web + api, copying the web build into the API.
     buildCommand: "corepack enable && pnpm install --frozen-lockfile && pnpm build:prod"
