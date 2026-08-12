@@ -1,0 +1,31 @@
+{
+  "// _comment": "AletCloud App Hosting config for DBPCMS. If AletCloud's dashboard asks you to type the build/start commands manually instead of reading this file, copy the values from here. See docs/DEPLOY-ALETCLOUD.md for the full walkthrough.",
+
+  "name": "dbpcms",
+  "runtime": "node",
+  "nodeVersion": "24.18.1",
+
+  "// build": "Installs deps with the exact pnpm version and builds shared + web + api, copying the frontend into the API so ONE app serves everything.",
+  "buildCommand": "corepack enable && pnpm install --frozen-lockfile && pnpm build:prod",
+
+  "// start": "Waits for the database to be reachable, runs migrations, seeds baseline data (idempotent), then starts the API.",
+  "startCommand": "pnpm start:prod",
+
+  "// port": "The app reads process.env.PORT. AletCloud injects it; do not hardcode.",
+  "healthCheckPath": "/health",
+
+  "envVars": [
+    { "key": "NODE_ENV", "value": "production" },
+    { "key": "DATABASE_URL", "value": "<PASTE the AletCloud Managed Database connection string here>" },
+    { "key": "PUBLIC_APP_URL", "value": "<PASTE your AletCloud app URL here, e.g. https://dbpcms.aletcloud.app>" },
+    { "key": "CORS_ORIGINS", "value": "<same as PUBLIC_APP_URL>" },
+    { "key": "JWT_ACCESS_SECRET", "value": "<generate a long random 32+ char secret>" },
+    { "key": "JWT_REFRESH_SECRET", "value": "<generate a DIFFERENT long random 32+ char secret>" },
+    { "key": "JWT_ACCESS_TTL", "value": "15m" },
+    { "key": "JWT_REFRESH_TTL", "value": "7d" },
+    { "key": "STORAGE_ROOT", "value": "./storage" },
+    { "key": "SEED_ADMIN_EMAIL", "value": "booneeraa9@gmail.com" },
+    { "key": "SEED_ADMIN_PASSWORD", "value": "<set a strong first-login password>" },
+    { "key": "LOG_LEVEL", "value": "info" }
+  ]
+}
